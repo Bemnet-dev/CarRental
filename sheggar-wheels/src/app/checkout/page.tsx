@@ -5,6 +5,10 @@ import { getSession } from "@/lib/auth";
 import { read, write, KEYS } from "@/lib/storage";
 import { Car, Booking } from "@/types";
 
+function formatPrice(price: number) {
+  return `${price} ETB`;
+}
+
 function Checkout() {
   const router = useRouter();
   const params = useSearchParams();
@@ -58,7 +62,7 @@ function Checkout() {
       <h1 className="text-2xl font-bold mb-4">Checkout</h1>
       <div className="bg-card p-4 rounded shadow mb-4">
         <p className="font-semibold">{car.name}</p>
-        <p>${car.pricePerDay}/day</p>
+        <p>{formatPrice(car.pricePerDay)}/day</p>
       </div>
       <form onSubmit={submit} className="bg-card p-4 rounded shadow space-y-4">
         <input type="date" required value={data.startDate} onChange={e => setData({...data, startDate: e.target.value})} className="w-full border p-2 rounded" />

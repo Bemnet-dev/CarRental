@@ -7,6 +7,10 @@ import { getSession } from "@/lib/auth";
 import Link from "next/link";
 import Image from "next/image";
 
+function formatPrice(price: number) {
+  return `${price} ETB`;
+}
+
 export default function CarDetail() {
   const params = useParams();
   const router = useRouter();
@@ -44,7 +48,7 @@ export default function CarDetail() {
           <h1 className="text-3xl font-bold">{car.name}</h1>
           <p className="text-muted-foreground">{car.location.neighbourhood}</p>
           <p className="my-4">{car.description}</p>
-          <p className="text-2xl font-bold text-primary">${car.pricePerDay}/day</p>
+          <p className="text-2xl font-bold text-primary">{formatPrice(car.pricePerDay)}/day</p>
           <button onClick={book} className="mt-4 bg-primary text-primary-foreground px-6 py-3 rounded">Book Now</button>
         </div>
       </div>

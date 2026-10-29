@@ -15,6 +15,10 @@ import { HeroSearch } from "@/components/HeroSearch";
 const unsplash = (id: string, width = 800) =>
   `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${width}&q=80`;
 
+const formatPrice = (price: number) => {
+  return `${price} ETB`;
+};
+
 const HERO_IMAGES = [
   { src: unsplash("1503376780353-7e6692767b70", 480), alt: "Sports car on an open road" },
   { src: unsplash("1494976388531-d1058494cdd8", 480), alt: "Classic muscle car" },
@@ -245,7 +249,7 @@ export default function Home() {
                   </div>
                   <p className="shrink-0 text-right">
                     <span className="font-display text-2xl leading-none text-foreground">
-                      ${car.price}
+                      {formatPrice(car.price)}
                     </span>
                     <span className="mt-1 block text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
                       per day

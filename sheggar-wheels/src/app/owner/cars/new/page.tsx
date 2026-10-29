@@ -4,6 +4,10 @@ import { useRouter } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { read, write, KEYS } from "@/lib/storage";
 
+function formatPrice(price: number) {
+  return `${price} ETB`;
+}
+
 export default function NewCar() {
   const router = useRouter();
   const [session, setSession] = useState<any>(null);
@@ -54,7 +58,7 @@ export default function NewCar() {
           <input type="text" placeholder="Model" required value={data.model} onChange={e => setData({...data, model: e.target.value})} className="border p-2 rounded" />
         </div>
         <input type="number" placeholder="Year" value={data.year} onChange={e => setData({...data, year: parseInt(e.target.value)})} className="w-full border p-2 rounded" />
-        <input type="number" placeholder="Price per day" value={data.pricePerDay} onChange={e => setData({...data, pricePerDay: parseInt(e.target.value)})} className="w-full border p-2 rounded" />
+        <input type="number" placeholder="Price per day (ETB)" value={data.pricePerDay} onChange={e => setData({...data, pricePerDay: parseInt(e.target.value)})} className="w-full border p-2 rounded" />
         <input type="text" placeholder="Neighbourhood" required value={data.neighbourhood} onChange={e => setData({...data, neighbourhood: e.target.value})} className="w-full border p-2 rounded" />
         <input type="text" placeholder="Address" required value={data.address} onChange={e => setData({...data, address: e.target.value})} className="w-full border p-2 rounded" />
         <textarea placeholder="Description" value={data.description} onChange={e => setData({...data, description: e.target.value})} className="w-full border p-2 rounded" />

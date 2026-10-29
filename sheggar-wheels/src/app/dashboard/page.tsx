@@ -33,7 +33,7 @@ export default function Dashboard() {
                 <td className="p-4">{b.id.slice(-6)}</td>
                 <td className="p-4">{b.startDate} to {b.endDate}</td>
                 <td className="p-4">{b.status}</td>
-                <td className="p-4">${b.totalPrice}</td>
+                <td className="p-4">ETB {b.totalPrice}</td>
               </tr>
             ))}
           </tbody>
