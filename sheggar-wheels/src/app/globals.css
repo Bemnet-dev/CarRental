@@ -2,23 +2,78 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --primary: #2563eb;
-  --primary-dark: #1d4ed8;
-  --accent: #f59e0b;
-}
+@layer base {
+  :root {
+    /* Zen Linen — light mode */
+    --background: 42 28% 88%;
+    --foreground: 0 0% 18%;
+    --card: 41 42% 93%;
+    --card-foreground: 0 0% 18%;
+    --popover: 41 42% 93%;
+    --popover-foreground: 0 0% 18%;
+    --primary: 0 0% 18%;
+    --primary-foreground: 41 42% 93%;
+    --secondary: 42 23% 81%;
+    --secondary-foreground: 0 0% 18%;
+    --muted: 42 21% 77%;
+    --muted-foreground: 43 14% 32%;
+    --accent: 52 23% 87%;
+    --accent-foreground: 0 0% 18%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 41 42% 93%;
+    --border: 42 22% 78%;
+    --input: 42 22% 78%;
+    --ring: 0 0% 18%;
+    --radius: 0.5rem;
+  }
 
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  background: linear-gradient(to bottom, #f8fafc, #ffffff);
+  .dark {
+    --background: 48 3% 12%;
+    --foreground: 42 28% 88%;
+    --card: 51 4% 14%;
+    --card-foreground: 42 28% 88%;
+    --popover: 51 4% 14%;
+    --popover-foreground: 42 28% 88%;
+    --primary: 42 28% 88%;
+    --primary-foreground: 48 3% 12%;
+    --secondary: 49 7% 21%;
+    --secondary-foreground: 42 28% 88%;
+    --muted: 47 6% 18%;
+    --muted-foreground: 42 12% 65%;
+    --accent: 49 7% 21%;
+    --accent-foreground: 42 28% 88%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 41 42% 93%;
+    --border: 45 8% 22%;
+    --input: 45 8% 22%;
+    --ring: 42 28% 88%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    margin: 0;
+    letter-spacing: 0.01em;
+    font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI",
+      "Roboto", "Helvetica Neue", sans-serif;
+  }
+
+  ::selection {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+  }
 }
 
 @layer utilities {
   .glass {
     backdrop-filter: blur(10px);
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(233, 228, 216, 0.85);
+  }
+
+  .text-balance {
+    text-wrap: balance;
   }
 }

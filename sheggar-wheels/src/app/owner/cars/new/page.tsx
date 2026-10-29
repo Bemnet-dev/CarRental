@@ -47,7 +47,7 @@ export default function NewCar() {
   return (
     <main className="max-w-2xl mx-auto p-8">
       <h1 className="text-2xl font-bold mb-4">Add New Car</h1>
-      <form onSubmit={submit} className="bg-white p-4 rounded shadow space-y-4">
+      <form onSubmit={submit} className="bg-card p-4 rounded shadow space-y-4">
         <input type="text" placeholder="Car Name" required value={data.name} onChange={e => setData({...data, name: e.target.value})} className="w-full border p-2 rounded" />
         <div className="grid grid-cols-2 gap-4">
           <input type="text" placeholder="Brand" required value={data.brand} onChange={e => setData({...data, brand: e.target.value})} className="border p-2 rounded" />
@@ -59,7 +59,7 @@ export default function NewCar() {
         <input type="text" placeholder="Address" required value={data.address} onChange={e => setData({...data, address: e.target.value})} className="w-full border p-2 rounded" />
         <textarea placeholder="Description" value={data.description} onChange={e => setData({...data, description: e.target.value})} className="w-full border p-2 rounded" />
         <input type="text" placeholder="Features (comma separated)" value={data.features} onChange={e => setData({...data, features: e.target.value})} className="w-full border p-2 rounded" />
-        <button className="w-full bg-blue-600 text-white p-2 rounded">Submit</button>
+        <button className="w-full bg-primary text-primary-foreground p-2 rounded">Submit</button>
       </form>
     </main>
   );

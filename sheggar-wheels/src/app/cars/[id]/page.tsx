@@ -28,15 +28,15 @@ export default function CarDetail() {
 
   return (
     <main className="max-w-4xl mx-auto p-8">
-      <Link href="/cars" className="text-blue-600">← Back</Link>
-      <div className="mt-4 bg-white rounded shadow overflow-hidden">
+      <Link href="/cars" className="text-primary">← Back</Link>
+      <div className="mt-4 bg-card rounded shadow overflow-hidden">
         <img src={car.images[0]} alt={car.name} className="w-full h-64 object-cover" />
         <div className="p-6">
           <h1 className="text-3xl font-bold">{car.name}</h1>
-          <p className="text-gray-600">{car.location.neighbourhood}</p>
+          <p className="text-muted-foreground">{car.location.neighbourhood}</p>
           <p className="my-4">{car.description}</p>
-          <p className="text-2xl font-bold text-blue-600">${car.pricePerDay}/day</p>
-          <button onClick={book} className="mt-4 bg-blue-600 text-white px-6 py-3 rounded">Book Now</button>
+          <p className="text-2xl font-bold text-primary">${car.pricePerDay}/day</p>
+          <button onClick={book} className="mt-4 bg-primary text-primary-foreground px-6 py-3 rounded">Book Now</button>
         </div>
       </div>
     </main>

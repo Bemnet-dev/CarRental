@@ -17,8 +17,8 @@ export default function SignUp() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <form onSubmit={submit} className="bg-white p-8 rounded shadow w-96 space-y-4">
+    <div className="min-h-screen flex items-center justify-center bg-secondary">
+      <form onSubmit={submit} className="bg-card p-8 rounded shadow w-96 space-y-4">
         <h1 className="text-2xl font-bold">Sign Up</h1>
         {err && <p className="text-red-600">{err}</p>}
         <input type="text" placeholder="First Name" required value={data.firstName} onChange={e => setData({...data, firstName: e.target.value})} className="w-full border p-2 rounded" />
@@ -31,8 +31,8 @@ export default function SignUp() {
           <option value="renter">Renter</option>
           <option value="owner">Owner</option>
         </select>
-        <button className="w-full bg-blue-600 text-white p-2 rounded">Sign Up</button>
-        <Link href="/signin" className="text-blue-600">Sign In</Link>
+        <button className="w-full bg-primary text-primary-foreground p-2 rounded">Sign Up</button>
+        <Link href="/signin" className="text-primary">Sign In</Link>
       </form>
     </div>
   );

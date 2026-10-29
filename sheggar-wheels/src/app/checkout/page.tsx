@@ -56,15 +56,15 @@ function Checkout() {
   return (
     <main className="max-w-xl mx-auto p-8">
       <h1 className="text-2xl font-bold mb-4">Checkout</h1>
-      <div className="bg-white p-4 rounded shadow mb-4">
+      <div className="bg-card p-4 rounded shadow mb-4">
         <p className="font-semibold">{car.name}</p>
         <p>${car.pricePerDay}/day</p>
       </div>
-      <form onSubmit={submit} className="bg-white p-4 rounded shadow space-y-4">
+      <form onSubmit={submit} className="bg-card p-4 rounded shadow space-y-4">
         <input type="date" required value={data.startDate} onChange={e => setData({...data, startDate: e.target.value})} className="w-full border p-2 rounded" />
         <input type="date" required value={data.endDate} onChange={e => setData({...data, endDate: e.target.value})} className="w-full border p-2 rounded" />
         <input type="text" placeholder="Pickup Location" required value={data.pickupLocation} onChange={e => setData({...data, pickupLocation: e.target.value})} className="w-full border p-2 rounded" />
-        <button className="w-full bg-blue-600 text-white p-2 rounded">Request Booking</button>
+        <button className="w-full bg-primary text-primary-foreground p-2 rounded">Request Booking</button>
       </form>
     </main>
   );

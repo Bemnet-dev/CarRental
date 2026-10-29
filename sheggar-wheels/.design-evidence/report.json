@@ -1,0 +1,77 @@
+{
+  "contract": "Product: Sheggar Wheels — an Addis Ababa peer-to-peer car rental marketplace. Job: let a renter find a nearby car quickly while giving owners a clear path to list. Primary action: Browse cars, reinforced by the hero search. Hierarchy: sticky shadcnblocks Navbar1 (brand, Home/Browse Cars/Fleet/Renters/Owners menus, Sign In + Get Started) -> headline and perspective car corridor -> neighbourhood/type search -> featured fleet -> three-step explanation -> owner CTA -> footer. Target viewports: 390x844 and 1440x900. Reference: the zen-linen shadcn theme (21st.dev/@serafimcloud/themes/zen-linen) applied across every route — warm linen background #E9E4D8, cream cards #F4EFE4, charcoal primary #2E2E2E, sand secondary, muted clay accents, 0.5rem radius — with Roboto as the sole typeface and the shadcnblocks Navbar1 component as the site navigation.",
+  "targetViewports": ["390x844", "1440x900"],
+  "theme": {
+    "name": "zen-linen",
+    "source": "https://21st.dev/@serafimcloud/themes/zen-linen",
+    "tokens": {
+      "background": "#E9E4D8",
+      "card": "#F4EFE4",
+      "primary": "#2E2E2E",
+      "secondary": "#D8D2C4",
+      "accent": "#E6E4D7",
+      "muted": "#CFC8B8",
+      "border": "#D2CBBB",
+      "radius": "0.5rem",
+      "letterSpacing": "0.01em",
+      "font": "Roboto (300/400/500/700/900 via next/font)"
+    },
+    "coverage": "All routes: layout shell (Navbar1, footer), landing page, /cars, /cars/[id], /dashboard, /checkout, /owner, /owner/cars/new, /admin, /signin, /signup. Hardcoded blue/gray/white utility classes on interior pages were mapped to theme tokens (bg-primary, bg-card, border-input, text-muted-foreground, etc.)."
+  },
+  "navbar": {
+    "component": "src/components/ui/shadcnblocks-com-navbar1.tsx (shadcnblocks Navbar1, adapted)",
+    "wrapper": "src/components/Navbar.tsx — sticky container, session-aware auth, Sheggar Wheels menu data",
+    "adaptations": [
+      "logo uses an SW monogram mark instead of the shadcnblocks SVG",
+      "menu items point at real routes: /, /cars, /cars?category=..., /cars?fuelType=Hybrid, /#how, /dashboard, /owner, /signup",
+      "auth swaps to My Dashboard / Owner Portal / Admin + Sign Out (first name) when a session exists",
+      "auth.signup gained an optional onClick so Sign Out runs signOut() instead of navigating",
+      "NavigationMenuLink moved to per-item asChild anchors to fix an <a>-in-<a> hydration error",
+      "desktop nav + Sheet mobile drawer verified at 1440x900 and 390x844"
+    ]
+  },
+  "accessibility": {
+    "status": "pass",
+    "evidence": "Verified in rendered Chromium at both target viewports: computed body color rgb(46,46,46) on rgb(233,228,216) = 10.1:1 contrast; nav muted text rgb(93,87,70) on linen = 5.9:1; both hero selects keep sr-only labels; mobile menu button has aria-label 'Open menu'; the Fleet/Renters/Owners dropdowns and the mobile Sheet accordion are keyboard-operable Radix primitives; zero console or page errors on all five captured routes; zero horizontal overflow everywhere."
+  },
+  "responsive": {
+    "status": "pass",
+    "evidence": "Measured scrollWidth-clientWidth = 0px on /, /cars, /dashboard, /signin at 390x844 and 1440x900. Desktop shows the horizontal NavigationMenu with hover dropdown; below lg the navbar collapses to the logo + Sheet trigger and the drawer stacks menu accordions, extra links in a 2-col grid, and both auth buttons. Landing hero search stacks to two selects plus a full-width Find a car button."
+  },
+  "functional": {
+    "status": "pass",
+    "evidence": "Hero search with Bole + SUV navigates to /cars?neighbourhood=Bole&category=SUV and renders '2 cars available'. Fleet dropdown shows category links; /cars reads and applies query params. Production build (next build) compiles all 13 routes; tsc --noEmit clean."
+  },
+  "renderedEvidence": [
+    {
+      "viewport": "1440x900",
+      "artifact": "nav-desktop.png",
+      "observation": "Navbar1 on linen with SW monogram, menu, Sign In outline + Get Started charcoal buttons; Fleet dropdown open showing Economy/SUV/Luxury/Hybrid with icons and descriptions on a cream popover."
+    },
+    {
+      "viewport": "390x844",
+      "artifact": "nav-mobile-sheet.png",
+      "observation": "Sheet drawer with logo header, accordion menu (Fleet/Renters/Owners), 2x2 extra links, and stacked Sign In / Get Started buttons."
+    },
+    {
+      "viewport": "1440x900",
+      "artifact": "zen-home-desktop.png",
+      "observation": "Full landing page in zen-linen: light corridor hero with charcoal headline and clay italic accent, cream search card, three-up fleet cards, secondary-tinted steps section, ember owner panel, charcoal footer."
+    },
+    {
+      "viewport": "390x844",
+      "artifact": "zen-home-mobile.png",
+      "observation": "Mobile landing stacks cleanly: hero, search, single-column fleet, steps, owner panel, footer — no overflow."
+    },
+    {
+      "viewport": "1440x900",
+      "artifact": "zen-cars-desktop.png",
+      "observation": "Cars listing fully rethemed: linen gradient background, cream card surfaces, charcoal primary buttons, token-based borders and muted text (previously hardcoded blue/gray)."
+    },
+    {
+      "viewport": "1440x900",
+      "artifact": "zen-signin-desktop.png",
+      "observation": "Sign-in card on linen background with charcoal primary button — blue palette fully removed."
+    }
+  ]
+}

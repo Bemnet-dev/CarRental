@@ -25,12 +25,12 @@ export default function Owner() {
     <main className="max-w-6xl mx-auto p-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Owner Dashboard</h1>
-        <Link href="/owner/cars/new" className="bg-blue-600 text-white px-4 py-2 rounded">Add Car</Link>
+        <Link href="/owner/cars/new" className="bg-primary text-primary-foreground px-4 py-2 rounded">Add Car</Link>
       </div>
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-white p-4 rounded shadow"><p>Cars</p><p className="text-2xl font-bold">{cars.length}</p></div>
-        <div className="bg-white p-4 rounded shadow"><p>Bookings</p><p className="text-2xl font-bold">{bookings.length}</p></div>
-        <div className="bg-white p-4 rounded shadow"><p>Pending</p><p className="text-2xl font-bold">{bookings.filter(b=>b.status==='requested').length}</p></div>
+        <div className="bg-card p-4 rounded shadow"><p>Cars</p><p className="text-2xl font-bold">{cars.length}</p></div>
+        <div className="bg-card p-4 rounded shadow"><p>Bookings</p><p className="text-2xl font-bold">{bookings.length}</p></div>
+        <div className="bg-card p-4 rounded shadow"><p>Pending</p><p className="text-2xl font-bold">{bookings.filter(b=>b.status==='requested').length}</p></div>
       </div>
     </main>
   );

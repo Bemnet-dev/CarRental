@@ -21,10 +21,10 @@ export default function Dashboard() {
   return (
     <main className="max-w-6xl mx-auto p-8">
       <h1 className="text-3xl font-bold mb-6">My Dashboard</h1>
-      <div className="bg-white rounded shadow">
+      <div className="bg-card rounded shadow">
         <div className="p-4 border-b"><h2 className="text-xl">My Bookings</h2></div>
         <table className="w-full">
-          <thead className="bg-gray-50">
+          <thead className="bg-secondary">
             <tr><th className="p-4 text-left">Booking ID</th><th className="p-4 text-left">Dates</th><th className="p-4 text-left">Status</th><th className="p-4 text-left">Total</th></tr>
           </thead>
           <tbody>
@@ -38,7 +38,7 @@ export default function Dashboard() {
             ))}
           </tbody>
         </table>
-        {bookings.length === 0 && <p className="p-4 text-center">No bookings. <Link href="/cars" className="text-blue-600">Browse cars</Link></p>}
+        {bookings.length === 0 && <p className="p-4 text-center">No bookings. <Link href="/cars" className="text-primary">Browse cars</Link></p>}
       </div>
     </main>
   );
