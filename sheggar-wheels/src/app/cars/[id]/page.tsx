@@ -5,6 +5,7 @@ import { Car } from "@/types";
 import { read, KEYS } from "@/lib/storage";
 import { getSession } from "@/lib/auth";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function CarDetail() {
   const params = useParams();
@@ -30,7 +31,15 @@ export default function CarDetail() {
     <main className="max-w-4xl mx-auto p-8">
       <Link href="/cars" className="text-primary">← Back</Link>
       <div className="mt-4 bg-card rounded shadow overflow-hidden">
-        <img src={car.images[0]} alt={car.name} className="w-full h-64 object-cover" />
+        <div className="relative h-64">
+          <Image
+            src={car.images[0]}
+            alt={car.name}
+            fill
+            sizes="(max-width: 896px) 100vw, 896px"
+            className="object-cover"
+          />
+        </div>
         <div className="p-6">
           <h1 className="text-3xl font-bold">{car.name}</h1>
           <p className="text-muted-foreground">{car.location.neighbourhood}</p>

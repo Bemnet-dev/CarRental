@@ -1,4 +1,5 @@
 import * as React from "react";
+import Image from "next/image";
 import { Book, Menu, Sunset, Trees, Zap } from "lucide-react";
 
 import {
@@ -154,7 +155,13 @@ const Navbar1 = ({
       className={`flex items-center gap-2 ${className ?? ""}`}
     >
       {logo.src ? (
-        <img src={logo.src} className="w-8" alt={logo.alt} />
+        <Image
+          src={logo.src}
+          width={32}
+          height={32}
+          className="w-8"
+          alt={logo.alt}
+        />
       ) : (
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           {logo.mark}

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 /* ── the corridor ────────────────────────────────────────────────
@@ -227,12 +228,12 @@ export function ImageStreamHero({
                   }}
                 >
                   {img ? (
-                    <img
+                    <Image
                       src={img.src}
                       alt={img.alt ?? ""}
-                      loading="lazy"
-                      decoding="async"
-                      className="h-full w-full object-cover"
+                      fill
+                      sizes="(max-width: 1024px) 60vw, 40vw"
+                      className="object-cover"
                       draggable={false}
                     />
                   ) : null}

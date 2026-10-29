@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -215,12 +216,12 @@ export default function Home() {
                 className="group block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-background"
               >
                 <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-muted">
-                  <img
+                  <Image
                     src={car.image}
                     alt={`${car.name} in ${car.location}`}
-                    loading="lazy"
-                    decoding="async"
-                    className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
                   />
                   <span className="absolute left-4 top-4 rounded-full bg-ink/80 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.14em] text-sand backdrop-blur-sm">
                     {car.category}

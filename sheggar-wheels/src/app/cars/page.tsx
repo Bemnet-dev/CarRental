@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Car } from "@/types";
 import { read, initData, KEYS } from "@/lib/storage";
 
@@ -75,8 +76,14 @@ export default function CarsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filtered.map(car => (
             <div key={car.id} className="group bg-card rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border border-border">
-              <div className="relative overflow-hidden">
-                <img src={car.images[0]} alt={car.name} className="w-full h-56 object-cover group-hover:scale-110 transition-transform duration-500" />
+              <div className="relative h-56 overflow-hidden">
+                <Image
+                  src={car.images[0]}
+                  alt={car.name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  className="object-cover group-hover:scale-110 transition-transform duration-500"
+                />
                 <div className="absolute top-4 right-4">
                   <span className="bg-card/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold text-primary">{car.category}</span>
                 </div>
