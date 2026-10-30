@@ -92,7 +92,7 @@ const menu: MenuItem[] = [
         title: "Owner portal",
         description: "Track earnings, bookings and listings",
         icon: <KeyRound className="size-5 shrink-0" />,
-        url: "/owner",
+        url: "/dashboard",
       },
       {
         title: "Verified community",
@@ -124,15 +124,14 @@ export function Navbar() {
     window.location.href = "/";
   };
 
-  const isRenter = !!session?.roles?.includes("renter");
   const isOwner = !!session?.roles?.includes("owner");
   const isAdmin = !!session?.roles?.includes("admin");
 
   const auth = session
     ? {
         login: {
-          text: isRenter ? "My Dashboard" : isOwner ? "Owner Portal" : isAdmin ? "Admin" : "Dashboard",
-          url: isRenter ? "/dashboard" : isOwner ? "/owner" : isAdmin ? "/admin" : "/dashboard",
+          text: isAdmin ? "Admin Console" : isOwner ? "Owner Portal" : "My Dashboard",
+          url: "/dashboard",
         },
         signup: { text: `Sign Out (${session.firstName})`, url: "/", onClick: logout },
       }

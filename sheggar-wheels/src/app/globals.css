@@ -25,6 +25,16 @@
     --input: 42 22% 78%;
     --ring: 0 0% 18%;
     --radius: 0.5rem;
+
+    /* Dashboard sidebar — deep ink against the linen workspace */
+    --sidebar-background: 0 0% 18%;
+    --sidebar-foreground: 42 28% 88%;
+    --sidebar-primary: 34 45% 53%;
+    --sidebar-primary-foreground: 0 0% 18%;
+    --sidebar-accent: 0 0% 24%;
+    --sidebar-accent-foreground: 42 28% 88%;
+    --sidebar-border: 0 0% 27%;
+    --sidebar-ring: 34 45% 53%;
   }
 
   .dark {
@@ -47,6 +57,15 @@
     --border: 45 8% 22%;
     --input: 45 8% 22%;
     --ring: 42 28% 88%;
+
+    --sidebar-background: 48 3% 12%;
+    --sidebar-foreground: 42 28% 88%;
+    --sidebar-primary: 34 45% 53%;
+    --sidebar-primary-foreground: 0 0% 18%;
+    --sidebar-accent: 45 6% 18%;
+    --sidebar-accent-foreground: 42 28% 88%;
+    --sidebar-border: 45 8% 22%;
+    --sidebar-ring: 34 45% 53%;
   }
 
   * {

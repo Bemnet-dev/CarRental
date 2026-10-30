@@ -1,8 +1,8 @@
 {
-  "contract": "Product: Sheggar Wheels — an Addis Ababa peer-to-peer car rental marketplace. Job: let a renter find a nearby car quickly while giving owners a clear path to list. Primary action: Browse cars, reinforced by the hero search. Hierarchy: sticky shadcnblocks Navbar1 (brand, Home/Browse Cars/Fleet/Renters/Owners menus, Sign In + Get Started) -> headline and perspective car corridor -> neighbourhood/type search -> featured fleet -> three-step explanation -> owner CTA -> footer. Target viewports: 390x844 and 1440x900. Reference: the zen-linen shadcn theme (21st.dev/@serafimcloud/themes/zen-linen) applied across every route — warm linen background #E9E4D8, cream cards #F4EFE4, charcoal primary #2E2E2E, sand secondary, muted clay accents, 0.5rem radius — with Roboto as the sole typeface and the shadcnblocks Navbar1 component as the site navigation.",
+  "contract": "Product: Sheggar Wheels — an Addis Ababa peer-to-peer car rental marketplace. Job: let a renter find and book a nearby car, let an owner manage a fleet and respond to requests, and let an admin run the marketplace — all from one role-aware dashboard. Primary action for renters: Browse cars, reinforced by the dashboard CTA. Primary action for owners: respond to booking requests and add cars. Primary action for admins: clear the listing review queue. Hierarchy: public routes keep the sticky shadcnblocks Navbar1 and footer; authenticated routes use a shared dark-ink sidebar shell with a sticky topbar, role-scoped navigation, and a content canvas of page header → KPI stat row → primary work card → secondary insight panel. Target viewports: 390x844 and 1440x900. Reference: the zen-linen shadcn theme (21st.dev/@serafimcloud/themes/zen-linen) — warm linen background #E9E4D8, cream cards #F4EFE4, charcoal primary #2E2E2E, sand secondary, muted clay accents, 0.5rem radius — with Roboto as the sole typeface, extended by shadcn sidebar tokens (dark ink sidebar, sand foreground, ember active indicator).",
   "targetViewports": ["390x844", "1440x900"],
   "theme": {
-    "name": "zen-linen",
+    "name": "zen-linen + ink sidebar",
     "source": "https://21st.dev/@serafimcloud/themes/zen-linen",
     "tokens": {
       "background": "#E9E4D8",
@@ -12,66 +12,176 @@
       "accent": "#E6E4D7",
       "muted": "#CFC8B8",
       "border": "#D2CBBB",
+      "sidebar": "#2E2E2E (ink)",
+      "sidebarForeground": "#E9E4D8 (sand)",
+      "sidebarPrimary": "#C4703A (ember)",
       "radius": "0.5rem",
       "letterSpacing": "0.01em",
       "font": "Roboto (300/400/500/700/900 via next/font)"
     },
-    "coverage": "All routes: layout shell (Navbar1, footer), landing page, /cars, /cars/[id], /dashboard, /checkout, /owner, /owner/cars/new, /admin, /signin, /signup. Hardcoded blue/gray/white utility classes on interior pages were mapped to theme tokens (bg-primary, bg-card, border-input, text-muted-foreground, etc.)."
+    "coverage": "Public routes: layout shell (Navbar1, footer), landing page, /cars, /cars/[id], /checkout, /signin, /signup. Dashboard routes: /dashboard, /dashboard/bookings, /dashboard/listings, /dashboard/users, /dashboard/settings, /owner/cars/new. /owner and /admin permanently redirect to /dashboard via next.config.ts."
   },
-  "navbar": {
-    "component": "src/components/ui/shadcnblocks-com-navbar1.tsx (shadcnblocks Navbar1, adapted)",
-    "wrapper": "src/components/Navbar.tsx — sticky container, session-aware auth, Sheggar Wheels menu data",
-    "adaptations": [
-      "logo uses an SW monogram mark instead of the shadcnblocks SVG",
-      "menu items point at real routes: /, /cars, /cars?category=..., /cars?fuelType=Hybrid, /#how, /dashboard, /owner, /signup",
-      "auth swaps to My Dashboard / Owner Portal / Admin + Sign Out (first name) when a session exists",
-      "auth.signup gained an optional onClick so Sign Out runs signOut() instead of navigating",
-      "NavigationMenuLink moved to per-item asChild anchors to fix an <a>-in-<a> hydration error",
-      "desktop nav + Sheet mobile drawer verified at 1440x900 and 390x844"
+  "dashboard": {
+    "shell": "src/components/dashboard/DashboardShell.tsx — shadcn Sidebar (collapsible icon rail) + SidebarInset, cookie-backed default state (sidebar_state), sticky topbar with SidebarTrigger, workspace label, page title, Browse cars, and View site.",
+    "provider": "src/components/dashboard/dashboard-context.tsx — loads the localStorage session and marketplace data, then refreshes on the sw:data-changed event and cross-tab storage events.",
+    "roles": {
+      "renter": "Overview (active/upcoming/completed/spent + recent bookings + next trip), My bookings, Browse cars, How it works, Profile & settings.",
+      "owner": "Overview (active listings/requests/revenue/average rate + booking requests + fleet), Booking requests, My listings, Add a car, Browse marketplace, Profile & settings.",
+      "admin": "Overview (users/listings/bookings/revenue + pending approvals + platform mix + recent bookings), Bookings, Fleet, Users, Browse cars, Profile & settings."
+    },
+    "interactions": [
+      "Owner confirms or declines a requested booking; the row and KPI counters update immediately.",
+      "Renter cancels a requested or confirmed booking.",
+      "Admin resolves a disputed booking.",
+      "Admin approves or rejects pending cars and sets approved cars inactive.",
+      "Admin suspends or reactivates users.",
+      "Any role edits first name, last name, phone, and neighbourhood in Profile & settings.",
+      "Owner submits a new car and is redirected to My listings, where the pending car appears."
     ]
   },
   "accessibility": {
     "status": "pass",
-    "evidence": "Verified in rendered Chromium at both target viewports: computed body color rgb(46,46,46) on rgb(233,228,216) = 10.1:1 contrast; nav muted text rgb(93,87,70) on linen = 5.9:1; both hero selects keep sr-only labels; mobile menu button has aria-label 'Open menu'; the Fleet/Renters/Owners dropdowns and the mobile Sheet accordion are keyboard-operable Radix primitives; zero console or page errors on all five captured routes; zero horizontal overflow everywhere."
+    "evidence": "Measured in rendered Chromium at 1440x900 and 390x844. Heading text rgb(46,46,46) on linen rgb(233,228,216) = 10.7:1; muted body text = 5.67:1; sidebar group labels on ink = 10.7:1; sidebar menu text on ink = 4.62:1 (all meet WCAG AA, with body/labels well above). The shadcn SidebarTrigger exposes aria-label 'Toggle Sidebar' and shows a solid 2px focus ring with a 2px offset when focused. Every icon-only booking action carries an explicit aria-label (Confirm booking, Decline booking, Cancel booking, Resolve dispute). Add-car form controls are paired with visible <Label> elements; native selects have labels; table headers are real <th> cells; status changes are rendered as text badges, not color alone. Zero page errors across all captured dashboard routes."
   },
   "responsive": {
     "status": "pass",
-    "evidence": "Measured scrollWidth-clientWidth = 0px on /, /cars, /dashboard, /signin at 390x844 and 1440x900. Desktop shows the horizontal NavigationMenu with hover dropdown; below lg the navbar collapses to the logo + Sheet trigger and the drawer stacks menu accordions, extra links in a 2-col grid, and both auth buttons. Landing hero search stacks to two selects plus a full-width Find a car button."
+    "evidence": "16 dashboard captures at 390x844 and 1440x900 all measured documentElement.scrollWidth - innerWidth = 0. Below md the sidebar becomes a Sheet drawer opened by the topbar trigger; the drawer exposes the full role navigation and profile footer, closes by overlay/Escape, and introduced no overflow. KPI cards stack one per row on mobile and become 2-up at sm and 4-up at xl. Overview booking tables use a compact mode (tighter padding, icon-only actions, hidden secondary lines) so the Action column fits beside the insight panel at 1440; the dedicated bookings/users tables keep full detail and scroll inside their card rather than the page."
   },
   "functional": {
     "status": "pass",
-    "evidence": "Hero search with Bole + SUV navigates to /cars?neighbourhood=Bole&category=SUV and renders '2 cars available'. Fleet dropdown shows category links; /cars reads and applies query params. Production build (next build) compiles all 13 routes; tsc --noEmit clean."
+    "evidence": "next build compiles all 14 routes; tsc --noEmit is clean after clearing stale .next types. Live checks: owner sign-in from /signin lands on /dashboard with the sidebar and no public footer; /owner and /admin both resolve to /dashboard; signed-out /dashboard lands on /signin?next=%2Fdashboard; public / keeps navbar and footer and no sidebar. Owner confirm changed booking-demo-4 from requested to confirmed and moved Awaiting response 1 → 0 and Active trips 1 → 2. Add-car submitted Kia Rio 2022 with features ['Bluetooth','Air conditioning'], persisted it with status pending, redirected to /dashboard/listings, and rendered it in the list. Mobile drawer opened with the full owner navigation."
+  },
+  "contentStates": {
+    "loading": {
+      "status": "not-applicable",
+      "reason": "The demo resolves its localStorage session synchronously on mount and has no network data fetch; DashboardShell's Skeleton frame is a brief hydration placeholder rather than a user-visible loading state."
+    },
+    "empty": {
+      "status": "pass",
+      "evidence": "With the owner fleet cleared, My listings renders the dashed EmptyState: 'No cars in this fleet yet' with an Add a car action, while all four KPI cards read 0. See dashboard-empty-desktop.png."
+    },
+    "error": {
+      "status": "not-applicable",
+      "reason": "The dashboard reads and writes localStorage only; there is no remote API or network failure path to surface in this demo."
+    },
+    "partial": {
+      "status": "not-applicable",
+      "reason": "Data loads as one local snapshot, so there is no partially-loaded state to render."
+    },
+    "success": {
+      "status": "pass",
+      "evidence": "All three roles render populated overviews with seeded users, cars, and bookings; the renter, owner, and admin desktop captures show real KPI values, booking rows, and fleet/insight panels."
+    },
+    "permission": {
+      "status": "pass",
+      "evidence": "A renter opening /dashboard/users sees the Restricted area page with an Admin access required card and a Back to dashboard action, while the sidebar omits the Users item. See dashboard-permission-desktop.png."
+    }
   },
   "renderedEvidence": [
     {
       "viewport": "1440x900",
-      "artifact": "nav-desktop.png",
-      "observation": "Navbar1 on linen with SW monogram, menu, Sign In outline + Get Started charcoal buttons; Fleet dropdown open showing Economy/SUV/Luxury/Hybrid with icons and descriptions on a cream popover."
+      "artifact": "dashboard-renter-desktop.png",
+      "observation": "Renter overview in the ink sidebar shell: Overview/My bookings/Browse cars/How it works/Profile & settings nav, 4 KPI cards (Active bookings 1, Upcoming trips 2, Completed 1, Total spent 600 ETB), compact Recent bookings table with visible Action icons, and a Your next trip panel with a Toyota Corolla photo, pickup/return dates, and 135 ETB total."
     },
     {
       "viewport": "390x844",
-      "artifact": "nav-mobile-sheet.png",
-      "observation": "Sheet drawer with logo header, accordion menu (Fleet/Renters/Owners), 2x2 extra links, and stacked Sign In / Get Started buttons."
+      "artifact": "dashboard-renter-mobile.png",
+      "observation": "Mobile renter overview: collapsed sidebar with topbar trigger, stacked KPI cards, and full-width content; no horizontal overflow."
+    },
+    {
+      "viewport": "1440x900",
+      "artifact": "dashboard-owner-desktop.png",
+      "observation": "Owner overview: 4 KPI cards (Active listings 4, Booking requests 1, Revenue 360 ETB, Average daily rate 68 ETB), compact Booking requests table with icon-only Confirm/Decline actions, Your fleet list with four approved cars and thumbnails, and Fleet performance below."
+    },
+    {
+      "viewport": "390x844",
+      "artifact": "dashboard-owner-mobile.png",
+      "observation": "Mobile owner overview: header actions wrap, KPI cards stack, and the shell keeps a single column with zero page overflow."
+    },
+    {
+      "viewport": "1440x900",
+      "artifact": "dashboard-admin-desktop.png",
+      "observation": "Admin overview: 5 users / 8 active listings / 7 bookings / 660 ETB gross revenue, Pending approvals card with Toyota Hilux 2022 and Approve/Reject, Platform mix distribution bars for users, fleet, and bookings, and Recent bookings below."
+    },
+    {
+      "viewport": "390x844",
+      "artifact": "dashboard-admin-mobile.png",
+      "observation": "Mobile admin overview: stacked KPI cards and full-width review/manage actions, with the admin navigation hidden behind the sidebar trigger."
+    },
+    {
+      "viewport": "1440x900",
+      "artifact": "dashboard-renter-bookings-desktop.png",
+      "observation": "Renter My bookings: KPI row plus a status filter (All 4 / Requested / Confirmed / Cancelled / Completed) and a full-width table with vehicle, owner, dates, status, total, and Cancel actions."
+    },
+    {
+      "viewport": "1440x900",
+      "artifact": "dashboard-owner-bookings-desktop.png",
+      "observation": "Owner Booking requests: status filters and a full-width table with renter contact, dates, status, total, and Confirm/Decline actions."
+    },
+    {
+      "viewport": "1440x900",
+      "artifact": "dashboard-owner-confirm-desktop.png",
+      "observation": "Post-interaction state after confirming the Toyota RAV4 request: Awaiting response drops to 0, Active trips rises to 2, the row reads Confirmed, and the status filter counts update to Confirmed 2."
+    },
+    {
+      "viewport": "1440x900",
+      "artifact": "dashboard-owner-listings-desktop.png",
+      "observation": "Owner My listings: 4 total / 4 approved / 0 pending / 0 inactive, search and status filter chips, and a 3-up CarCard grid with photos, category badges, daily rate, specs, and status."
+    },
+    {
+      "viewport": "1440x900",
+      "artifact": "dashboard-admin-fleet-desktop.png",
+      "observation": "Admin Fleet: KPI row, search and status filters, and the admin table showing vehicle thumbnails, owners, categories, rates, status, submission dates, and Approve/Reject or Set inactive controls."
+    },
+    {
+      "viewport": "1440x900",
+      "artifact": "dashboard-admin-users-desktop.png",
+      "observation": "Admin Users: total/renters/owners/suspended KPIs, search plus role and status selects, and an accounts table with role/status badges, contact details, joined date, and Suspend/Reactivate actions."
+    },
+    {
+      "viewport": "390x844",
+      "artifact": "dashboard-admin-users-mobile.png",
+      "observation": "Mobile Users view: stacked KPI cards and controls; the wide accounts table scrolls inside its card without expanding the page."
+    },
+    {
+      "viewport": "1440x900",
+      "artifact": "dashboard-settings-desktop.png",
+      "observation": "Profile & settings: editable first/last name, disabled email, phone, neighbourhood, Save changes, and an Account card with avatar initials, role/status badges, workspace, member-since date, and Sign out."
+    },
+    {
+      "viewport": "1440x900",
+      "artifact": "dashboard-owner-add-car-desktop.png",
+      "observation": "Owner Add a car: two-column form using shadcn Input/Textarea/Label/Button, vehicle details and pickup location cards, a Publish card with review expectations, Submit for review, and Cancel."
+    },
+    {
+      "viewport": "390x844",
+      "artifact": "dashboard-owner-add-car-mobile.png",
+      "observation": "Mobile Add a car: the two-column form collapses to a single column with full-width fields and stacked Publish actions, no overflow."
+    },
+    {
+      "viewport": "390x844",
+      "artifact": "dashboard-mobile-nav.png",
+      "observation": "Mobile sidebar Sheet open over a dimmed overview: Sheggar Wheels logo, Workspace/Manage/Account groups, active Overview indicator, booking badge, profile footer, and Sign out."
+    },
+    {
+      "viewport": "1440x900",
+      "artifact": "dashboard-permission-desktop.png",
+      "observation": "Renter opening the admin-only Users route sees the Restricted area header and an Admin access required card with a shield icon, explanation, and Back to dashboard action."
+    },
+    {
+      "viewport": "1440x900",
+      "artifact": "dashboard-empty-desktop.png",
+      "observation": "Owner My listings with an empty fleet: all KPIs read 0 and the dashed empty card reads 'No cars in this fleet yet' with an Add a car action."
     },
     {
       "viewport": "1440x900",
       "artifact": "zen-home-desktop.png",
-      "observation": "Full landing page in zen-linen: light corridor hero with charcoal headline and clay italic accent, cream search card, three-up fleet cards, secondary-tinted steps section, ember owner panel, charcoal footer."
+      "observation": "Public landing page still renders the shadcnblocks Navbar1 and footer outside the dashboard route group, confirming the public shell is preserved."
     },
     {
       "viewport": "390x844",
       "artifact": "zen-home-mobile.png",
-      "observation": "Mobile landing stacks cleanly: hero, search, single-column fleet, steps, owner panel, footer — no overflow."
-    },
-    {
-      "viewport": "1440x900",
-      "artifact": "zen-cars-desktop.png",
-      "observation": "Cars listing fully rethemed: linen gradient background, cream card surfaces, charcoal primary buttons, token-based borders and muted text (previously hardcoded blue/gray)."
-    },
-    {
-      "viewport": "1440x900",
-      "artifact": "zen-signin-desktop.png",
-      "observation": "Sign-in card on linen background with charcoal primary button — blue palette fully removed."
+      "observation": "Public landing page at mobile width keeps the collapsed navbar and stacked sections with no overflow."
     }
   ]
 }
