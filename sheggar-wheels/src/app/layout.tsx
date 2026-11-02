@@ -10,7 +10,7 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "Sheggar Wheels — Car rental in Addis Ababa",
+  title: "DashDrive — Car rental in Addis Ababa",
   description:
     "Rent cars directly from verified owners across Addis Ababa. Transparent daily rates, flexible pick-up, no middlemen.",
 };

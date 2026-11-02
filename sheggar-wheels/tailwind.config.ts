@@ -1,5 +1,6 @@
 import type { Config } from "tailwindcss";
 import animate from "tailwindcss-animate";
+import containerQueries from "@tailwindcss/container-queries";
 
 export default {
   darkMode: "class",
@@ -66,8 +67,14 @@ export default {
       },
       fontFamily: {
         display: ["var(--font-sans)", "ui-sans-serif", "Roboto", "sans-serif"],
+        "bjork-display": [
+          "var(--font-sans)",
+          "ui-sans-serif",
+          "Roboto",
+          "sans-serif",
+        ],
       },
     },
   },
-  plugins: [animate],
+  plugins: [animate, containerQueries],
 } satisfies Config;

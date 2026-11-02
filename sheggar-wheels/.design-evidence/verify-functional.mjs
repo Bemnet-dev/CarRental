@@ -7,7 +7,7 @@ const out = process.env.EVIDENCE_DIR ?? process.cwd();
 
 const ownerSession = {
   userId: "owner-1",
-  email: "owner1@sheggar.com",
+  email: "owner1@dashdrive.com",
   role: "owner",
   roles: ["owner"],
   firstName: "Tadesse",

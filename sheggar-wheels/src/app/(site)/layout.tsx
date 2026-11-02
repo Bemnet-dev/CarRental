@@ -16,10 +16,10 @@ export default function SiteLayout({
           <div>
             <Link href="/" className="flex items-center gap-2.5">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ember text-sm font-bold text-ink">
-                SW
+                DD
               </span>
               <span className="text-lg font-semibold tracking-tight text-sand">
-                Sheggar Wheels
+                DashDrive
               </span>
             </Link>
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-sand/50">
@@ -39,7 +39,7 @@ export default function SiteLayout({
             </Link>
           </nav>
           <p className="text-xs text-sand/55">
-            &copy; 2026 Sheggar Wheels. Demo data.
+            &copy; 2026 DashDrive. Demo data.
           </p>
         </div>
       </footer>

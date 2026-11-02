@@ -8,7 +8,7 @@ const out = process.env.EVIDENCE_DIR ?? process.cwd();
 const sessions = {
   renter: {
     userId: "renter-1",
-    email: "renter1@sheggar.com",
+    email: "renter1@dashdrive.com",
     role: "renter",
     roles: ["renter"],
     firstName: "Dawit",
@@ -16,7 +16,7 @@ const sessions = {
   },
   owner: {
     userId: "owner-1",
-    email: "owner1@sheggar.com",
+    email: "owner1@dashdrive.com",
     role: "owner",
     roles: ["owner"],
     firstName: "Tadesse",
@@ -24,7 +24,7 @@ const sessions = {
   },
   admin: {
     userId: "admin-1",
-    email: "admin@sheggar.com",
+    email: "admin@dashdrive.com",
     role: "admin",
     roles: ["admin"],
     firstName: "Admin",

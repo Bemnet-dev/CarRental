@@ -5,8 +5,8 @@ const EDGE = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"
 const BASE = "http://localhost:3000";
 const out = process.env.EVIDENCE_DIR ?? process.cwd();
 
-const renter = { userId: "renter-1", email: "renter1@sheggar.com", role: "renter", roles: ["renter"], firstName: "Dawit", lastName: "Alemayehu" };
-const owner = { userId: "owner-1", email: "owner1@sheggar.com", role: "owner", roles: ["owner"], firstName: "Tadesse", lastName: "Bekele" };
+const renter = { userId: "renter-1", email: "renter1@dashdrive.com", role: "renter", roles: ["renter"], firstName: "Dawit", lastName: "Alemayehu" };
+const owner = { userId: "owner-1", email: "owner1@dashdrive.com", role: "owner", roles: ["owner"], firstName: "Tadesse", lastName: "Bekele" };
 
 const browser = await chromium.launch({ executablePath: EDGE, headless: true });
 

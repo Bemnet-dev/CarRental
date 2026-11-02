@@ -142,9 +142,9 @@ export function Navbar() {
 
   const logo = {
     url: "/",
-    alt: "Sheggar Wheels",
-    title: "Sheggar Wheels",
-    mark: <span className="text-sm font-bold">SW</span>,
+    alt: "DashDrive",
+    title: "DashDrive",
+    mark: <span className="text-sm font-bold">DD</span>,
   };
 
   return (

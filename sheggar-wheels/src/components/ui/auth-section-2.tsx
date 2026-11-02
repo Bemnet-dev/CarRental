@@ -98,10 +98,10 @@ export default function AuthSectionTwo({
               className="flex items-center gap-3 text-lg text-sand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember focus-visible:ring-offset-4 focus-visible:ring-offset-ink"
             >
               <span className="flex size-8 items-center justify-center rounded-lg bg-ember text-sm font-bold text-ink">
-                SW
+                DD
               </span>
               <span className="font-semibold tracking-tight">
-                Sheggar Wheels
+                DashDrive
               </span>
             </Link>
 

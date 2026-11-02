@@ -26,7 +26,7 @@ console.log(
 
 // Sign in as owner through the real form.
 await page.goto(`${BASE}/signin`, { waitUntil: "domcontentloaded" });
-await page.getByPlaceholder("Email").fill("owner1@sheggar.com");
+await page.getByPlaceholder("Email").fill("owner1@dashdrive.com");
 await page.getByPlaceholder("Password").fill("owner123");
 await Promise.all([
   page.waitForURL("**/dashboard", { timeout: 15000 }),

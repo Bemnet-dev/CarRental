@@ -104,16 +104,16 @@ function DashboardFrame({
               <SidebarMenuButton
                 size="lg"
                 asChild
-                tooltip="Sheggar Wheels"
+                tooltip="DashDrive"
                 className="gap-3"
               >
                 <Link href="/dashboard">
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sm font-bold text-sidebar-primary-foreground">
-                    SW
+                    DD
                   </span>
                   <div className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
                     <span className="truncate font-semibold text-sidebar-foreground">
-                      Sheggar Wheels
+                      DashDrive
                     </span>
                     <span className="truncate text-xs text-sidebar-foreground/60">
                       {roleShortLabel(role)} workspace

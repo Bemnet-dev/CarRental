@@ -51,7 +51,7 @@ export function roleShortLabel(role: UserRole) {
 }
 
 export function initials(firstName?: string, lastName?: string) {
-  return `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.toUpperCase() || "SW";
+  return `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.toUpperCase() || "DD";
 }
 
 export function formatCurrency(value: number) {

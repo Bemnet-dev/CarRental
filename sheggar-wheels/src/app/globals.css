@@ -96,3 +96,138 @@
     text-wrap: balance;
   }
 }
+
+/* --------------------------------------------------------------------------
+   App block theme (sign-in block)
+   Ported from the Tailwind 4 token sheet to this project's Tailwind 3 setup.
+   The block also injects these as inline custom properties, so it keeps its
+   own palette even when the surrounding app uses a different theme.
+   -------------------------------------------------------------------------- */
+@layer base {
+  :root {
+    --bjork-bg: #f7f3ea;
+    --bjork-surface: #fffcf6;
+    --bjork-surface-muted: rgba(250, 246, 237, 0.94);
+    --bjork-surface-hover: #f5efe3;
+    --bjork-surface-active: #efe7d8;
+    --bjork-panel: #f8f2e7;
+    --bjork-menu: rgba(255, 252, 246, 0.98);
+    --bjork-field: rgba(255, 252, 246, 0.96);
+    --bjork-field-muted: rgba(248, 242, 231, 0.82);
+    --bjork-field-inset: rgba(239, 231, 216, 0.72);
+    --bjork-error-bg: #fff0e8;
+    --bjork-text: #171717;
+    --bjork-text-strong: rgba(23, 23, 23, 0.9);
+    --bjork-text-medium: rgba(23, 23, 23, 0.72);
+    --bjork-text-muted: rgba(23, 23, 23, 0.56);
+    --bjork-text-soft: rgba(23, 23, 23, 0.46);
+    --bjork-text-faint: rgba(23, 23, 23, 0.22);
+    --bjork-inverted-text: #fff8f0;
+    --bjork-border: #eee6db;
+    --bjork-border-muted: #f5ede2;
+    --bjork-border-strong: #e1d7c8;
+    --bjork-thumb: #a49b8e;
+    --bjork-track: #ded6ca;
+    --bjork-accent: #ec7d43;
+    --bjork-accent-hover: #f0935f;
+    --bjork-accent-soft: rgba(236, 125, 67, 0.1);
+    --bjork-accent-muted: rgba(236, 125, 67, 0.2);
+    --bjork-accent-foreground: #3f2112;
+    --bjork-accent-ink: #b4521f;
+    --bjork-error: #b3371f;
+    --bjork-error-soft: #fbeae4;
+    --bjork-success: #2f7a4f;
+    --bjork-success-soft: #e8f3eb;
+    --bjork-warning: #9a6512;
+    --bjork-chart-ghost: #cfc5b4;
+    --bjork-shadow-surface: inset 0 7px 14px rgba(88, 72, 49, 0.045),
+      inset 0 0.5px 0.5px rgba(255, 255, 255, 0.92),
+      inset 1px 0 0 rgba(88, 72, 49, 0.026),
+      inset -1px 0 0 rgba(255, 255, 255, 0.68),
+      0 14px 22px -9px rgba(66, 52, 33, 0.11);
+    --bjork-shadow-soft: inset 0 1px 0 rgba(88, 72, 49, 0.045),
+      inset 0 0.5px 0.5px rgba(255, 255, 255, 0.86);
+    --bjork-shadow-panel: inset 0 1px 0 rgba(88, 72, 49, 0.04),
+      inset 1px 0 0 rgba(88, 72, 49, 0.024),
+      inset -1px 0 0 rgba(255, 255, 255, 0.64),
+      0 18px 38px -30px rgba(66, 52, 33, 0.2);
+    --bjork-shadow-menu: inset 0 1px 0 rgba(88, 72, 49, 0.04),
+      inset 0 12px 24px rgba(88, 72, 49, 0.022),
+      inset 1px 0 0 rgba(88, 72, 49, 0.024),
+      inset -1px 0 0 rgba(255, 255, 255, 0.62),
+      0 22px 44px -26px rgba(66, 52, 33, 0.22);
+    --bjork-shadow-inset: inset 0 1px 10px rgba(88, 72, 49, 0.12),
+      inset 0 0.5px 0.5px rgba(255, 255, 255, 0.72);
+    --bjork-ring-offset: #f7f3ea;
+
+    --blk-accent-fill: var(--bjork-accent);
+    --blk-accent-fill-ink: var(--bjork-accent-foreground);
+    --blk-accent-ink: var(--bjork-accent-ink);
+    --blk-error: var(--bjork-error);
+    --blk-error-soft: var(--bjork-error-soft);
+    --blk-success: var(--bjork-success);
+    --blk-success-soft: var(--bjork-success-soft);
+    --blk-warning: var(--bjork-warning);
+    --blk-chart-ghost: var(--bjork-chart-ghost);
+  }
+
+  .dark {
+    --bjork-bg: #111111;
+    --bjork-surface: #121212;
+    --bjork-surface-muted: rgba(22, 22, 22, 0.92);
+    --bjork-surface-hover: #181818;
+    --bjork-surface-active: #202020;
+    --bjork-panel: #0d0d0d;
+    --bjork-menu: rgba(18, 18, 18, 0.98);
+    --bjork-field: rgba(18, 18, 18, 0.95);
+    --bjork-field-muted: rgba(18, 18, 18, 0.55);
+    --bjork-field-inset: rgba(9, 9, 9, 0.75);
+    --bjork-error-bg: #130d0a;
+    --bjork-text: #ededed;
+    --bjork-text-strong: rgba(237, 237, 237, 0.9);
+    --bjork-text-medium: rgba(237, 237, 237, 0.72);
+    --bjork-text-muted: rgba(237, 237, 237, 0.6);
+    --bjork-text-soft: rgba(237, 237, 237, 0.4);
+    --bjork-text-faint: rgba(237, 237, 237, 0.22);
+    --bjork-inverted-text: #080808;
+    --bjork-border: #232323;
+    --bjork-border-muted: #1c1c1c;
+    --bjork-border-strong: #343434;
+    --bjork-thumb: #626262;
+    --bjork-track: #090909;
+    --bjork-accent: #ec5c13;
+    --bjork-accent-hover: #f07832;
+    --bjork-accent-soft: rgba(236, 92, 19, 0.12);
+    --bjork-accent-muted: rgba(236, 92, 19, 0.24);
+    --bjork-accent-foreground: #fff2ea;
+    --bjork-accent-ink: #f0935f;
+    --bjork-error: #f08063;
+    --bjork-error-soft: rgba(240, 128, 99, 0.14);
+    --bjork-success: #5ecf92;
+    --bjork-success-soft: rgba(94, 207, 146, 0.14);
+    --bjork-warning: #e2b45f;
+    --bjork-chart-ghost: #3a3a3a;
+    --bjork-shadow-surface: inset 0 7px 14px rgba(255, 255, 255, 0.03),
+      inset 0 0.5px 0.5px rgba(255, 255, 255, 0.06),
+      0 14px 20px -6px rgba(0, 0, 0, 0.45);
+    --bjork-shadow-soft: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+    --bjork-shadow-panel: inset 0 1px 0 rgba(255, 255, 255, 0.035),
+      0 18px 36px -28px rgba(0, 0, 0, 0.9);
+    --bjork-shadow-menu: inset 0 1px 0 rgba(255, 255, 255, 0.055),
+      inset 0 12px 24px rgba(255, 255, 255, 0.018),
+      inset 0 -18px 26px rgba(0, 0, 0, 0.24),
+      0 22px 42px -22px rgba(0, 0, 0, 0.9);
+    --bjork-shadow-inset: inset 0 1px 10px rgba(0, 0, 0, 0.45);
+    --bjork-ring-offset: #080808;
+
+    --blk-accent-fill: var(--bjork-accent);
+    --blk-accent-fill-ink: var(--bjork-accent-foreground);
+    --blk-accent-ink: var(--bjork-accent-ink);
+    --blk-error: var(--bjork-error);
+    --blk-error-soft: var(--bjork-error-soft);
+    --blk-success: var(--bjork-success);
+    --blk-success-soft: var(--bjork-success-soft);
+    --blk-warning: var(--bjork-warning);
+    --blk-chart-ghost: var(--bjork-chart-ghost);
+  }
+}

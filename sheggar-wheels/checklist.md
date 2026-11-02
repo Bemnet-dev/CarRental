@@ -1,4 +1,4 @@
-# Sheggar Wheels — System Verification Checklist (`checklist.md`)
+# DashDrive — System Verification Checklist (`checklist.md`)
 
 Use this comprehensive checklist to verify that all functional requirements, security guardrails, business rules, and capstone criteria are fully operational.
 
@@ -15,9 +15,9 @@ Use this comprehensive checklist to verify that all functional requirements, sec
 
 ## 2. Authentication, Session & Guardrails
 - [ ] **Demo One-Click Sign-In**:
-  - [ ] Clicking "Sign In as Renter" logs in `renter1@sheggar.com` and navigates to `/dashboard`.
-  - [ ] Clicking "Sign In as Owner" logs in `owner1@sheggar.com` and navigates to `/owner`.
-  - [ ] Clicking "Sign In as Admin" logs in `admin@sheggar.com` and navigates to `/admin`.
+  - [ ] Clicking "Sign In as Renter" logs in `renter1@dashdrive.com` and navigates to `/dashboard`.
+  - [ ] Clicking "Sign In as Owner" logs in `owner1@dashdrive.com` and navigates to `/owner`.
+  - [ ] Clicking "Sign In as Admin" logs in `admin@dashdrive.com` and navigates to `/admin`.
 - [ ] **Role Coexistence**:
   - [ ] A user can hold both `renter` and `owner` roles simultaneously (`roles: ['renter', 'owner']`).
   - [ ] When dual-role user is logged in, both "Dashboard" and "Owner Portal" links appear in the navigation.

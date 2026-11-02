@@ -275,7 +275,7 @@ export default function Home() {
                 No middlemen.
               </h2>
               <p className="mt-5 max-w-sm text-sm leading-relaxed text-muted-foreground">
-                Sheggar Wheels connects you straight to the person who owns the
+                DashDrive connects you straight to the person who owns the
                 car. You agree the details together; we keep the listing,
                 request and payment in one place.
               </p>

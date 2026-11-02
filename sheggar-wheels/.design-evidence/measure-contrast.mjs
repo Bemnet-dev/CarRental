@@ -3,8 +3,8 @@ import { chromium } from "playwright-core";
 const EDGE = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
 const BASE = "http://localhost:3000";
 const sessions = {
-  renter: { userId: "renter-1", email: "renter1@sheggar.com", role: "renter", roles: ["renter"], firstName: "Dawit", lastName: "Alemayehu" },
-  admin: { userId: "admin-1", email: "admin@sheggar.com", role: "admin", roles: ["admin"], firstName: "Admin", lastName: "User" },
+  renter: { userId: "renter-1", email: "renter1@dashdrive.com", role: "renter", roles: ["renter"], firstName: "Dawit", lastName: "Alemayehu" },
+  admin: { userId: "admin-1", email: "admin@dashdrive.com", role: "admin", roles: ["admin"], firstName: "Admin", lastName: "User" },
 };
 
 const browser = await chromium.launch({ executablePath: EDGE, headless: true });

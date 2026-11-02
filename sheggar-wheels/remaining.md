@@ -1,4 +1,4 @@
-# Sheggar Wheels — Complete Remaining Implementation Plan (`remaining.md`)
+# DashDrive — Complete Remaining Implementation Plan (`remaining.md`)
 
 This document details every single missing and partial component, route, helper, business rule, and documentation requirement identified during the capstone audit. It serves as the definitive specification for completing the project against its brief.
 
