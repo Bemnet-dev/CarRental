@@ -3,7 +3,8 @@ export type UserRole = 'renter' | 'owner' | 'admin';
 export interface User {
   id: string;
   email: string;
-  password: string;
+  /** No longer stored client-side; credentials live in Better Auth. */
+  password?: string;
   firstName: string;
   lastName: string;
   role: UserRole;

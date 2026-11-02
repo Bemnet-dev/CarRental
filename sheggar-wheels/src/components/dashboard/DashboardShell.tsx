@@ -28,10 +28,9 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getSession, signOut } from "@/lib/auth";
+import { signOut } from "@/lib/session";
 import {
   initials,
-  normalizeSession,
   primaryRole,
   roleShortLabel,
   type Session,
@@ -41,36 +40,21 @@ import type { UserRole } from "@/types";
 
 export function DashboardShell({
   defaultOpen = true,
+  initialSession,
   children,
 }: {
   defaultOpen?: boolean;
+  initialSession: Session;
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const [session, setSession] = React.useState<Session | null>(null);
-  const [loading, setLoading] = React.useState(true);
-
+  // The session is verified on the server (see app/(dashboard)/layout.tsx);
+  // this only hydrates the localStorage-backed directory after first paint.
   React.useEffect(() => {
     initData();
-    const next = normalizeSession(getSession());
-
-    if (!next) {
-      router.replace(
-        `/signin?next=${encodeURIComponent(window.location.pathname)}`,
-      );
-      return;
-    }
-
-    setSession(next);
-    setLoading(false);
-  }, [router]);
-
-  if (loading || !session) {
-    return <DashboardLoading />;
-  }
+  }, []);
 
   return (
-    <DashboardProvider initialSession={session}>
+    <DashboardProvider initialSession={initialSession}>
       <DashboardFrame defaultOpen={defaultOpen}>{children}</DashboardFrame>
     </DashboardProvider>
   );

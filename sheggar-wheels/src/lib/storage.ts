@@ -39,28 +39,40 @@ function migrateLegacyEmails() {
     return { ...user, email: user.email.replace('@sheggar.com', '@dashdrive.com') };
   });
   if (changed) write(KEYS.USERS, next);
+}
 
-  const session = read<{ email?: string }>(KEYS.SESSION, {});
-  if (session.email?.endsWith('@sheggar.com')) {
-    write(KEYS.SESSION, {
-      ...session,
-      email: session.email.replace('@sheggar.com', '@dashdrive.com'),
-    });
+/**
+ * Auth used to live in localStorage with plaintext passwords. Passwords now
+ * belong to Better Auth's hashed credentials, so scrub any copies that earlier
+ * versions of the app left in the browser.
+ */
+function stripLegacyPasswords() {
+  const users = read<User[]>(KEYS.USERS, []);
+  if (!users.some((user) => 'password' in user)) {
+    if (typeof window !== 'undefined') localStorage.removeItem(KEYS.SESSION);
+    return;
   }
+
+  write(
+    KEYS.USERS,
+    users.map(({ password: _password, ...user }) => user),
+  );
+  if (typeof window !== 'undefined') localStorage.removeItem(KEYS.SESSION);
 }
 
 export function initData() {
   if (typeof window === 'undefined') return;
 
   migrateLegacyEmails();
+  stripLegacyPasswords();
 
   if (read<User[]>(KEYS.USERS, []).length === 0) {
     const users: User[] = [
-      { id: 'admin-1', email: 'admin@dashdrive.com', password: 'admin123', firstName: 'Admin', lastName: 'User', role: 'admin', roles: ['admin'], phone: '+251911111111', status: 'active', createdAt: new Date().toISOString() },
-      { id: 'owner-1', email: 'owner1@dashdrive.com', password: 'owner123', firstName: 'Tadesse', lastName: 'Bekele', role: 'owner', roles: ['owner'], phone: '+251922222222', status: 'active', createdAt: new Date().toISOString(), neighbourhood: 'Bole' },
-      { id: 'owner-2', email: 'owner2@dashdrive.com', password: 'owner123', firstName: 'Sara', lastName: 'Mohammed', role: 'owner', roles: ['owner'], phone: '+251933333333', status: 'active', createdAt: new Date().toISOString(), neighbourhood: 'Kazanchis' },
-      { id: 'renter-1', email: 'renter1@dashdrive.com', password: 'renter123', firstName: 'Dawit', lastName: 'Alemayehu', role: 'renter', roles: ['renter'], phone: '+251944444444', status: 'active', createdAt: new Date().toISOString(), neighbourhood: 'Merkato' },
-      { id: 'renter-2', email: 'renter2@dashdrive.com', password: 'renter123', firstName: 'Hana', lastName: 'Tesfaye', role: 'renter', roles: ['renter'], phone: '+251955555555', status: 'active', createdAt: new Date().toISOString(), neighbourhood: 'Piassa' },
+      { id: 'admin-1', email: 'admin@dashdrive.com', firstName: 'Admin', lastName: 'User', role: 'admin', roles: ['admin'], phone: '+251911111111', status: 'active', createdAt: new Date().toISOString() },
+      { id: 'owner-1', email: 'owner1@dashdrive.com', firstName: 'Tadesse', lastName: 'Bekele', role: 'owner', roles: ['owner'], phone: '+251922222222', status: 'active', createdAt: new Date().toISOString(), neighbourhood: 'Bole' },
+      { id: 'owner-2', email: 'owner2@dashdrive.com', firstName: 'Sara', lastName: 'Mohammed', role: 'owner', roles: ['owner'], phone: '+251933333333', status: 'active', createdAt: new Date().toISOString(), neighbourhood: 'Kazanchis' },
+      { id: 'renter-1', email: 'renter1@dashdrive.com', firstName: 'Dawit', lastName: 'Alemayehu', role: 'renter', roles: ['renter'], phone: '+251944444444', status: 'active', createdAt: new Date().toISOString(), neighbourhood: 'Merkato' },
+      { id: 'renter-2', email: 'renter2@dashdrive.com', firstName: 'Hana', lastName: 'Tesfaye', role: 'renter', roles: ['renter'], phone: '+251955555555', status: 'active', createdAt: new Date().toISOString(), neighbourhood: 'Piassa' },
     ];
 
     const cars: Car[] = [
@@ -87,7 +99,7 @@ function seedDemoData() {
 
   const users = read<User[]>(KEYS.USERS, []);
   if (!users.find(u => u.id === 'renter-2')) {
-    users.push({ id: 'renter-2', email: 'renter2@dashdrive.com', password: 'renter123', firstName: 'Hana', lastName: 'Tesfaye', role: 'renter', roles: ['renter'], phone: '+251955555555', status: 'active', createdAt: new Date().toISOString(), neighbourhood: 'Piassa' });
+    users.push({ id: 'renter-2', email: 'renter2@dashdrive.com', firstName: 'Hana', lastName: 'Tesfaye', role: 'renter', roles: ['renter'], phone: '+251955555555', status: 'active', createdAt: new Date().toISOString(), neighbourhood: 'Piassa' });
     write(KEYS.USERS, users);
   }
 
