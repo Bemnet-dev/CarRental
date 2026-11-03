@@ -2,20 +2,21 @@
 
 import * as React from "react";
 
-import { getSession } from "@/lib/auth";
 import {
   DATA_CHANGED_EVENT,
+  emptyDashboardData,
   loadDashboardData,
-  normalizeSession,
   type DashboardData,
   type Session,
 } from "@/lib/dashboard";
+import { getSession } from "@/lib/session";
+import { initData } from "@/lib/storage";
 
 type DashboardContextValue = {
   session: Session;
   data: DashboardData;
   refresh: () => void;
-  refreshSession: () => void;
+  refreshSession: () => Promise<void>;
 };
 
 const DashboardContext = React.createContext<DashboardContextValue | null>(
@@ -31,19 +32,21 @@ export function DashboardProvider({
 }) {
   const [session, setSession] = React.useState(initialSession);
   const [data, setData] = React.useState(() =>
-    loadDashboardData(initialSession),
+    emptyDashboardData(initialSession),
   );
 
   const refresh = React.useCallback(() => {
     setData(loadDashboardData(session));
   }, [session]);
 
-  const refreshSession = React.useCallback(() => {
-    const next = normalizeSession(getSession());
+  const refreshSession = React.useCallback(async () => {
+    const next = await getSession();
     if (next) setSession(next);
   }, []);
 
   React.useEffect(() => {
+    // Seed the demo directory before the first read, then keep it in sync.
+    initData();
     refresh();
 
     const handleChange = () => refresh();

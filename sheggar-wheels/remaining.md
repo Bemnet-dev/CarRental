@@ -2,6 +2,8 @@
 
 This document details every single missing and partial component, route, helper, business rule, and documentation requirement identified during the capstone audit. It serves as the definitive specification for completing the project against its brief.
 
+> **Status note (Nov 2026):** Authentication now uses Better Auth with SQLite instead of a localStorage demo. Section 3.1 and the session-storage bullets in section 2.2 are superseded; see `AUTH.md` for the implemented model and `README.md` for setup. The remaining sections are still the original implementation plan.
+
 ---
 
 ## 1. Directory Structure & Route Organization
@@ -100,9 +102,9 @@ Add missing entities and expand existing interfaces:
 ### 2.2 Storage Layer Refactoring (`src/lib/storage.ts`)
 1. **Key Definitions**:
    - `localStorage` keys: `sw_users_v1`, `sw_cars_v1`, `sw_bookings_v1`, `sw_reviews_v1`, `sw_disputes_v1`, `sw_announcements_v1`.
-   - `sessionStorage` keys: `sw_session_v1`, `sw_checkout_draft_v1`.
-2. **Session Storage Migration**:
-   - Move `getSession()` and session writes from `localStorage` to `sessionStorage`.
+   - `sessionStorage` keys: `sw_checkout_draft_v1`.
+2. **Session Storage (superseded)**:
+   - Sessions are httpOnly Better Auth cookies backed by `data/auth.db`; no session token is stored in `localStorage` or `sessionStorage`.
 3. **Storage Helpers**:
    - Export typed CRUD functions: `getCars()`, `saveCar()`, `getBookings()`, `saveBooking()`, `getUsers()`, `saveUser()`, `getReviews()`, `saveReview()`, `getDisputes()`, `saveDispute()`, `getAnnouncements()`, `saveAnnouncement()`.
    - Implement `resetDemoData()` to reset all collections back to seed state on demand.
@@ -116,26 +118,22 @@ Add missing entities and expand existing interfaces:
 
 ## 3. Auth, Security & Guardrails
 
-### 3.1 Security Fixes (`src/lib/auth.ts`)
+### 3.1 Security Fixes (`src/lib/auth.ts`) — superseded by Better Auth
+
+> Implemented in `src/lib/auth.ts`, `src/lib/session.ts` and `AUTH.md`. Kept here as the original plan.
+
 1. **Fix `safeReturnPath`**:
-   Replace flawed logic with strict protocol-relative check:
-   ```ts
-   export function safeReturnPath(url: string | null): string {
-     if (!url) return '/';
-     if (!url.startsWith('/') || url.startsWith('//') || url.startsWith('/\\')) return '/';
-     return url;
-   }
-   ```
+   Implemented as `safeReturn` in `src/lib/session.ts`. It rejects protocol-relative, backslash/control-character, path-traversal and cross-origin variants before routing.
 2. **Purge Passwords from Storage**:
-   Remove plain-text passwords. Demo sign-in should authenticate against email directly.
+   Done. Passwords are scrypt hashes in `data/auth.db`; the local user directory has no password field.
 3. **Demo Quick Sign-In**:
-   Implement `signInAsDemo(role: 'renter' | 'owner' | 'admin')` allowing instant 1-click authentication from `/signin`.
+   Not implemented. The sign-in screen lists demo credentials; users still type them.
 4. **Multi-Role Coexistence**:
-   Allow users to possess both `renter` and `owner` in `roles: ['renter', 'owner']`.
+   Not implemented. Better Auth stores one `role` per user; the UI derives `roles: [role]`.
 5. **Role Guardrails**:
-   Implement `hasRole(user, role)` and `requireRole(role)` helpers.
+   Role drives navigation and data scoping; the marketplace data layer has no server-side authorization.
 6. **Active Session Lockout**:
-   Validate user `status !== 'suspended'` upon every state mutation, not just at sign-in time.
+   Suspended accounts cannot create a session and are redirected out of the dashboard. Local-storage mutations remain client-side.
 
 ---
 

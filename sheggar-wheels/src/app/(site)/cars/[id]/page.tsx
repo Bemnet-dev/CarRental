@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Car } from "@/types";
 import { read, KEYS } from "@/lib/storage";
-import { getSession } from "@/lib/auth";
+import { getSession } from "@/lib/session";
+import type { Session } from "@/lib/dashboard";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -15,12 +16,21 @@ export default function CarDetail() {
   const params = useParams();
   const router = useRouter();
   const [car, setCar] = useState<Car | null>(null);
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
-    setSession(getSession());
+    let active = true;
+
+    getSession().then((next) => {
+      if (active) setSession(next);
+    });
+
     const cars = read<Car[]>(KEYS.CARS, []);
     setCar(cars.find(c => c.id === params.id) || null);
+
+    return () => {
+      active = false;
+    };
   }, [params.id]);
 
   const book = () => {

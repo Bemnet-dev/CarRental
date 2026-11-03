@@ -27,7 +27,6 @@ import {
   SidebarSeparator,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Skeleton } from "@/components/ui/skeleton";
 import { signOut } from "@/lib/session";
 import {
   initials,
@@ -35,7 +34,6 @@ import {
   roleShortLabel,
   type Session,
 } from "@/lib/dashboard";
-import { initData } from "@/lib/storage";
 import type { UserRole } from "@/types";
 
 export function DashboardShell({
@@ -48,11 +46,7 @@ export function DashboardShell({
   children: React.ReactNode;
 }) {
   // The session is verified on the server (see app/(dashboard)/layout.tsx);
-  // this only hydrates the localStorage-backed directory after first paint.
-  React.useEffect(() => {
-    initData();
-  }, []);
-
+  // the provider hydrates the localStorage-backed directory after first paint.
   return (
     <DashboardProvider initialSession={initialSession}>
       <DashboardFrame defaultOpen={defaultOpen}>{children}</DashboardFrame>
@@ -74,9 +68,10 @@ function DashboardFrame({
   const navGroups = getNavGroups(role, data);
   const pageTitle = getPageTitle(pathname, role);
 
-  const logout = () => {
-    signOut();
+  const logout = async () => {
+    await signOut();
     router.replace("/");
+    router.refresh();
   };
 
   return (
@@ -251,19 +246,3 @@ function getPageTitle(pathname: string, role: UserRole) {
   return "Workspace";
 }
 
-function DashboardLoading() {
-  return (
-    <div className="flex min-h-svh bg-background">
-      <div className="hidden w-64 shrink-0 bg-sidebar md:block" />
-      <div className="flex flex-1 flex-col gap-6 p-6 lg:p-8">
-        <Skeleton className="h-9 w-56" />
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <Skeleton key={index} className="h-32 rounded-xl" />
-          ))}
-        </div>
-        <Skeleton className="h-72 rounded-xl" />
-      </div>
-    </div>
-  );
-}

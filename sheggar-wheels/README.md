@@ -1,36 +1,125 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DashDrive
 
-## Getting Started
+Peer-to-peer car rental demo for Addis Ababa. The UI is Next.js App Router with
+TypeScript, Tailwind CSS and shadcn/Radix components. Accounts and sessions are
+handled by Better Auth on SQLite; the demo marketplace data (cars, bookings,
+reviews, user directory) still lives in `localStorage`.
 
-First, run the development server:
+## Requirements
+
+- Node.js 20.9 or newer
+- npm
+
+## Setup
+
+```bash
+npm install
+```
+
+Create the local env file (PowerShell: `Copy-Item .env.example .env.local`):
+
+```bash
+cp .env.example .env.local
+```
+
+Set `BETTER_AUTH_SECRET` to 32+ random characters. In development you can leave
+it blank: the app generates a secret once and stores it in `data/auth.secret`
+(never committed).
+
+Create the auth tables and seed the demo accounts:
+
+```bash
+npm run db:migrate
+npm run db:seed
+```
+
+The migration CLI can log a "Database schema mismatch" warning while it
+creates the tables. If `npm run db:seed` then succeeds, the schema is ready.
+
+Run the app:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open <http://localhost:3000>.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+For a production build:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm run start
+```
 
-## Learn More
+Set `BETTER_AUTH_URL` to the public HTTPS origin, provide a permanent
+`BETTER_AUTH_SECRET`, and keep the `data/` directory on persistent storage.
 
-To learn more about Next.js, take a look at the following resources:
+## Demo accounts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Role   | Email                  | Password    |
+| ------ | ---------------------- | ----------- |
+| Admin  | `admin@dashdrive.com`  | `admin123`  |
+| Owner  | `owner1@dashdrive.com` | `owner123`  |
+| Owner  | `owner2@dashdrive.com` | `owner123`  |
+| Renter | `renter1@dashdrive.com`| `renter123` |
+| Renter | `renter2@dashdrive.com`| `renter123` |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+These passwords are shorter than the 10-character minimum enforced on public
+sign-up because the demo accounts are seeded directly into SQLite. New
+sign-ups must satisfy the 10-character rule.
 
-## Deploy on Vercel
+All roles use the same `/dashboard` workspace, which changes its navigation,
+metrics and label (Admin / Owner / Renter workspace) based on the signed-in
+user's role.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Authentication
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `/signin` and `/signup` submit to Better Auth at `/api/auth/*`.
+- Sessions are `better-auth.session_token` httpOnly cookies (`SameSite=Lax`,
+  7 days), so page JavaScript cannot read the token.
+- `/dashboard/*` is guarded on the server; without a session the request is
+  redirected to `/signin?next=...`.
+- Suspended accounts cannot create a session, and an already-live session is
+  redirected out of the dashboard.
+- Passwords are stored as scrypt hashes in `data/auth.db`. Neither
+  `localStorage` nor the user directory contains passwords.
+- Sign-in and sign-up are rate limited per IP (10 and 5 attempts per minute).
+
+See [AUTH.md](AUTH.md) for the model, configuration and known gaps.
+
+## Scripts
+
+| Script             | Purpose                                              |
+| ------------------ | ---------------------------------------------------- |
+| `npm run dev`      | Development server (Turbopack)                       |
+| `npm run build`    | Production build                                     |
+| `npm run start`    | Serve the production build                           |
+| `npm run lint`     | ESLint                                               |
+| `npm run db:migrate` | Create/update the Better Auth SQLite schema        |
+| `npm run db:seed`  | Create or refresh the five demo accounts             |
+
+`npm run db:seed` is idempotent: it refreshes directory fields, reactivates the
+demo accounts and never resets an existing password.
+
+## Data
+
+`localStorage` holds the demo marketplace: `sw_users_v1`, `sw_cars_v1`,
+`sw_bookings_v1`, `sw_reviews_v1`, `sw_disputes_v1` and
+`sw_announcements_v1`. It is seeded on first load. Clearing site data resets the
+marketplace but not the auth database.
+
+Auth data lives in `data/auth.db` (WAL mode). Both `data/auth.db` and
+`data/auth.secret` are gitignored.
+
+## Known limitations
+
+This is a capstone demo, not a production rental platform:
+
+- The marketplace directory is client-trusted `localStorage`; only
+  authentication is server-enforced.
+- Admin "Suspend" in the users view updates the local directory but not the
+  Better Auth record, so it does not block that account's future sign-ins.
+- Rate-limit counters are in memory and reset when the server restarts.
+- Email verification, password reset, magic links and 2FA are not enabled.
+- A user has one role; dual renter/owner accounts are not supported.
+- Payments and GPS tracking are simulated.

@@ -12,7 +12,7 @@ import {
   UserRound,
   Wallet,
 } from "lucide-react";
-import { getSession, signOut } from "@/lib/auth";
+import { getSession, signOut } from "@/lib/session";
 import { initData } from "@/lib/storage";
 import { Navbar1, type MenuItem } from "@/components/ui/shadcnblocks-com-navbar1";
 
@@ -115,11 +115,19 @@ export function Navbar() {
   const [session, setSession] = useState<Session>(null);
   useEffect(() => {
     initData();
-    setSession(getSession());
+    let active = true;
+
+    getSession().then((session) => {
+      if (active) setSession(session);
+    });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const logout = () => {
-    signOut();
+  const logout = async () => {
+    await signOut();
     setSession(null);
     window.location.href = "/";
   };

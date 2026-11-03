@@ -12,12 +12,11 @@ import { RoleBadge, StatusBadge } from "@/components/dashboard/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { signOut } from "@/lib/auth";
+import { signOut, updateProfile } from "@/lib/session";
 import {
   formatDateTime,
   initials,
   roleLabel,
-  updateUserProfile,
 } from "@/lib/dashboard";
 
 export function SettingsView() {
@@ -32,6 +31,8 @@ export function SettingsView() {
     neighbourhood: currentUser?.neighbourhood ?? "",
   });
   const [saved, setSaved] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+  const [error, setError] = React.useState("");
 
   React.useEffect(() => {
     if (!currentUser) return;
@@ -49,16 +50,31 @@ export function SettingsView() {
     return () => window.clearTimeout(timer);
   }, [saved]);
 
-  const submit = (event: React.FormEvent<HTMLFormElement>) => {
+  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    updateUserProfile(session.userId, form);
-    refreshSession();
-    setSaved(true);
+    setSaving(true);
+    setError("");
+
+    try {
+      const result = await updateProfile(form);
+      if (!result.success) {
+        setError(result.message);
+        return;
+      }
+
+      await refreshSession();
+      setSaved(true);
+    } catch {
+      setError("Could not save your profile. Check your connection and retry.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const logout = () => {
-    signOut();
+  const logout = async () => {
+    await signOut();
     router.replace("/");
+    router.refresh();
   };
 
   return (
@@ -147,13 +163,20 @@ export function SettingsView() {
             </div>
 
             <div className="flex flex-wrap items-center gap-3 border-t border-border/70 pt-4">
-              <Button type="submit">Save changes</Button>
+              <Button type="submit" disabled={saving}>
+                {saving ? "Saving…" : "Save changes"}
+              </Button>
               <p
                 aria-live="polite"
                 className="text-sm text-emerald-700 dark:text-emerald-300"
               >
                 {saved ? "Profile updated." : ""}
               </p>
+              {error ? (
+                <p role="alert" className="text-sm text-destructive">
+                  {error}
+                </p>
+              ) : null}
             </div>
           </form>
         </SectionCard>

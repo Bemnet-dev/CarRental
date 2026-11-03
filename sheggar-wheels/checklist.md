@@ -14,32 +14,42 @@ Use this comprehensive checklist to verify that all functional requirements, sec
 ---
 
 ## 2. Authentication, Session & Guardrails
-- [ ] **Demo One-Click Sign-In**:
-  - [ ] Clicking "Sign In as Renter" logs in `renter1@dashdrive.com` and navigates to `/dashboard`.
-  - [ ] Clicking "Sign In as Owner" logs in `owner1@dashdrive.com` and navigates to `/owner`.
-  - [ ] Clicking "Sign In as Admin" logs in `admin@dashdrive.com` and navigates to `/admin`.
-- [ ] **Role Coexistence**:
-  - [ ] A user can hold both `renter` and `owner` roles simultaneously (`roles: ['renter', 'owner']`).
-  - [ ] When dual-role user is logged in, both "Dashboard" and "Owner Portal" links appear in the navigation.
+
+> **Current implementation:** Better Auth email/password on SQLite. Sessions are
+> httpOnly cookies, not `sessionStorage`. Setup, accounts and known gaps are in
+> `README.md` and `AUTH.md`. Items marked **(gap)** are brief requirements that
+> this demo does not enforce server-side.
+
+- [ ] **Demo Accounts**:
+  - [ ] The demo strip on `/signin` lists `admin@dashdrive.com/admin123`, `owner1@dashdrive.com/owner123` and `renter1@dashdrive.com/renter123`.
+  - [ ] Each credential signs in to `/dashboard` and shows the matching workspace label (Admin / Owner / Renter workspace).
+  - [ ] `npm run db:seed` creates all five demo accounts; re-running it does not reset an existing password.
+- [ ] **Role Coexistence (gap)**:
+  - [ ] Dual-role accounts (`roles: ['renter', 'owner']`) are not supported; Better Auth stores one `role` per user and the UI derives `roles: [role]`.
 - [ ] **Public Signup Security**:
-  - [ ] Public `/signup` form does **not** permit choosing the `admin` role.
-  - [ ] Admin account is strictly restricted to the seeded demo user.
-- [ ] **Session Storage Validation**:
-  - [ ] Active session is stored in `sessionStorage` under `sw_session_v1` (closing browser tab terminates session).
-  - [ ] No plain-text passwords or secrets exist anywhere in `localStorage` or `sessionStorage`.
+  - [ ] Public `/signup` always creates a `renter` and cannot submit `role` or `status` (`input: false`).
+  - [ ] Admin access exists only through the seeded `admin@dashdrive.com` account.
+- [ ] **Session Validation**:
+  - [ ] The session is a `better-auth.session_token` cookie with `HttpOnly`, `SameSite=Lax` and a 7-day lifetime.
+  - [ ] No session token is written to `localStorage` or `sessionStorage`; `sw_session_v1` is removed if a legacy value exists.
+  - [ ] No plain-text passwords or secrets exist anywhere in `localStorage` or `sessionStorage`; passwords are scrypt hashes in `data/auth.db`.
 - [ ] **Sign-Out Flow**:
-  - [ ] Clicking "Sign Out" completely removes session keys from storage.
-  - [ ] User is redirected immediately to the home page `/`.
+  - [ ] Clicking "Sign out" deletes the session row, clears the cookie and redirects to `/`.
+  - [ ] A subsequent visit to `/dashboard` redirects to `/signin?next=%2Fdashboard`.
 - [ ] **Suspended User Lockout**:
-  - [ ] Suspended accounts cannot log in (shows "Account suspended" message).
-  - [ ] If an active user is suspended by admin in another tab, any subsequent booking or listing mutation is immediately blocked.
+  - [ ] Better Auth refuses to create a session for a suspended account (sign-in returns `401`).
+  - [ ] The dashboard server guard redirects an already-live session whose user is suspended.
+  - [ ] **(gap)** Admin "Suspend" in the users view updates only the local directory, not the Better Auth `user.status`, so it does not block that account's next sign-in.
+- [ ] **Rate Limiting & Origin Checks**:
+  - [ ] The 9th rapid bad sign-in returns `429` and the form shows "Too many attempts. Wait a minute and try again."
+  - [ ] A sign-in POST with an untrusted `Origin` returns `403`; a trusted origin returns `200`.
 - [ ] **Required Negative Security Tests**:
-  - [ ] **Negative Test 1**: Submitting a booking while signed out returns "Not signed in" and creates zero records in storage.
-  - [ ] **Negative Test 2**: Attempting to cancel another renter's booking returns "Not yours" and leaves storage unchanged.
-  - [ ] **Negative Test 3**: Accessing `/signin?next=https://example.com` or `/signin?next=//evil.com` safely redirects internally to `/` or `/dashboard`.
-- [ ] **Cross-User Privacy Guardrails**:
-  - [ ] Owner A cannot view or edit Owner B's vehicle by guessing the ID in `/owner/cars/[id]/edit`.
-  - [ ] Renter A cannot view Renter B's reservation details at `/bookings/[id]`.
+  - [ ] **Negative Test 1 (gap)**: `/checkout` without a session redirects to `/signin`; booking writes are local-storage operations with no server API, so enforcement is client-side only.
+  - [ ] **Negative Test 2 (gap)**: The UI only exposes the renter's own bookings, but the local-storage directory is client-editable, so cross-renter cancellation is not server-enforced.
+  - [ ] **Negative Test 3**: `/signin?next=https://example.com`, `//evil.example`, `/%5Cevil.example` and `/..//evil.example` all resolve internally to `/dashboard` after sign-in.
+- [ ] **Cross-User Privacy Guardrails (gap)**:
+  - [ ] Owner A cannot see Owner B's cars in the workspace because data is filtered by `ownerId`, but the underlying local directory is client-trusted.
+  - [ ] Renter A's booking list is filtered by `renterId`; direct cross-renter access is not server-enforced.
 
 ---
 
@@ -49,8 +59,8 @@ Use this comprehensive checklist to verify that all functional requirements, sec
 - [ ] `/` (Landing Page): Hero image corridor renders, quick search navigates to catalogue.
 - [ ] `/cars` (Catalogue): Displays all approved, active vehicles.
 - [ ] `/cars/[id]` (Car Details): Displays specs, images, host information, daily ETB price.
-- [ ] `/signin`: Renders credential form and demo one-click buttons.
-- [ ] `/signup`: Renders registration form with renter/owner role options.
+- [ ] `/signin`: Renders the credential form and the demo-credential strip (no one-click buttons).
+- [ ] `/signup`: Renders the registration form (name, email, password); new accounts are always renters.
 
 ### 3.2 Renter Protected Routes (Requires `renter` role; redirects unauthenticated to `/signin?next=...`)
 - [ ] `/dashboard`: Summary cards (Spend, Trips count, Next upcoming rental) and quick links.
@@ -192,7 +202,7 @@ Use this comprehensive checklist to verify that all functional requirements, sec
 - [ ] `README.md`: Contains overview, features, screenshots/video link, tech stack, setup instructions, demo credentials, limitations, and live deployment link.
 - [ ] `STRATEGY.md`: Documents every route, rendering strategy (SSG, Client CSR, Dynamic), and justifications.
 - [ ] `BOUNDARY.md`: Documents Server vs Client component boundaries and why localStorage mandates client code.
-- [ ] `AUTH.md`: Explains role model, guardrails, the 3 negative test cases, and includes the non-production security disclaimer.
+- [x] `AUTH.md`: Explains the Better Auth role model, guardrails, the 3 negative test cases, and includes the non-production security disclaimer.
 - [ ] `DATA.md`: Detailed entity schemas, storage keys, validation, corrupted JSON recovery, and seed catalog.
 - [ ] `PERF.md`: Documents Core Web Vitals (LCP, CLS, INP) and optimization steps.
 - [ ] `FUTURE.md`: Details simulated vs production items, real database transition plans, and payment API roadmap.

@@ -199,6 +199,22 @@ export async function signOut(): Promise<void> {
 }
 
 export function safeReturn(url: string | null) {
-  if (!url || !url.startsWith("/") || url.startsWith("//")) return "/";
-  return url;
+  if (!url) return "/";
+
+  // Reject protocol-relative, backslash-normalized and control-character
+  // forms before the URL parser can fold them into a different origin.
+  if (!url.startsWith("/") || url.startsWith("//") || url.startsWith("/\\")) {
+    return "/";
+  }
+  if (/[\\\u0000-\u001f\u007f]/.test(url)) return "/";
+
+  try {
+    const target = new URL(url, "http://app.local");
+    if (target.origin !== "http://app.local") return "/";
+    // Path traversal can collapse a same-origin path into "//host".
+    if (target.pathname.startsWith("//")) return "/";
+    return `${target.pathname}${target.search}${target.hash}`;
+  } catch {
+    return "/";
+  }
 }

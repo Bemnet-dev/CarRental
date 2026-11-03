@@ -12,26 +12,6 @@ export type Session = {
 
 export const DATA_CHANGED_EVENT = "sw:data-changed";
 
-export function normalizeSession(raw: unknown): Session | null {
-  const value = raw as Partial<Session> | null;
-  if (!value?.userId) return null;
-
-  const roles = (
-    Array.isArray(value.roles) && value.roles.length
-      ? value.roles
-      : [value.role ?? "renter"]
-  ).filter(Boolean) as UserRole[];
-
-  return {
-    userId: value.userId,
-    email: value.email ?? "",
-    role: (value.role ?? roles[0] ?? "renter") as UserRole,
-    roles,
-    firstName: value.firstName ?? "",
-    lastName: value.lastName ?? "",
-  };
-}
-
 export function primaryRole(session: Session): UserRole {
   if (session.roles.includes("admin")) return "admin";
   if (session.roles.includes("owner")) return "owner";
@@ -133,6 +113,22 @@ export function loadDashboardData(session: Session): DashboardData {
   };
 }
 
+/**
+ * Server-render placeholder: localStorage is unreadable until hydration, so the
+ * provider starts empty and fills in from the effect to avoid a mismatch.
+ */
+export function emptyDashboardData(session: Session): DashboardData {
+  return {
+    role: primaryRole(session),
+    users: [],
+    cars: [],
+    bookings: [],
+    myCars: [],
+    myBookings: [],
+    currentUser: undefined,
+  };
+}
+
 export function getCar(cars: Car[], carId: string) {
   return cars.find((car) => car.id === carId);
 }
@@ -182,20 +178,3 @@ export function updateUserStatus(id: string, status: User["status"]) {
   emitDataChanged();
 }
 
-export function updateUserProfile(
-  userId: string,
-  data: Pick<User, "firstName" | "lastName" | "phone" | "neighbourhood">,
-) {
-  const users = read<User[]>(KEYS.USERS, []);
-  write(
-    KEYS.USERS,
-    users.map((user) => (user.id === userId ? { ...user, ...data } : user)),
-  );
-
-  const rawSession = read<Record<string, unknown> | null>(KEYS.SESSION, null);
-  if (rawSession?.userId === userId) {
-    write(KEYS.SESSION, { ...rawSession, ...data });
-  }
-
-  emitDataChanged();
-}

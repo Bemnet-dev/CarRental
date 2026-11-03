@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getSession } from "@/lib/auth";
+import { getSession } from "@/lib/session";
+import type { Session } from "@/lib/dashboard";
 import { read, write, KEYS } from "@/lib/storage";
 import { Car, Booking } from "@/types";
 
@@ -13,16 +14,28 @@ function Checkout() {
   const router = useRouter();
   const params = useSearchParams();
   const carId = params.get('carId');
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [car, setCar] = useState<Car | null>(null);
   const [data, setData] = useState({ startDate: '', endDate: '', pickupLocation: '' });
 
   useEffect(() => {
-    const s = getSession();
-    if (!s || !s.roles?.includes('renter')) { router.push('/signin'); return; }
-    setSession(s);
+    let active = true;
+
+    getSession().then((next) => {
+      if (!active) return;
+      if (!next || !next.roles?.includes('renter')) {
+        router.push('/signin');
+        return;
+      }
+      setSession(next);
+    });
+
     const cars = read<Car[]>(KEYS.CARS, []);
     setCar(cars.find(c => c.id === carId) || null);
+
+    return () => {
+      active = false;
+    };
   }, [carId, router]);
 
   const submit = (e: any) => {

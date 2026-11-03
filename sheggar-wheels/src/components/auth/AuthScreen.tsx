@@ -9,7 +9,7 @@ import AppSignIn, {
   type AppSignInPayload,
   type AppSignInTestimonial,
 } from "@/components/ui/app-sign-in";
-import { safeReturn, signIn, signUp } from "@/lib/auth";
+import { safeReturn, signIn, signUp } from "@/lib/session";
 import { initData } from "@/lib/storage";
 
 const BRAND: AppSignInBrand = {
@@ -36,32 +36,32 @@ export function AuthScreen({ defaultMode }: { defaultMode: AppSignInMode }) {
     initData();
   }, []);
 
-  const handleSubmit = (payload: AppSignInPayload) => {
+  const handleSubmit = async (payload: AppSignInPayload) => {
     if (payload.mode === "sign-up") {
       const [firstName, ...rest] = (payload.name ?? "").trim().split(/\s+/);
-      const created = signUp({
+      const created = await signUp({
         firstName: firstName || "New",
         lastName: rest.join(" "),
         email: payload.email,
         password: payload.password,
         phone: "",
-        role: "renter",
         neighbourhood: "",
       });
       if (!created.success) {
-        throw new Error(created.message || "Could not create your account.");
+        throw new Error(created.message);
       }
-    }
-
-    const result = signIn(payload.email, payload.password);
-    if (!result.success) {
-      throw new Error(result.message || "Those details don't match an account.");
+    } else {
+      const result = await signIn(payload.email, payload.password);
+      if (!result.success) {
+        throw new Error(result.message);
+      }
     }
 
     const next = safeReturn(
       new URLSearchParams(window.location.search).get("next"),
     );
     router.push(next === "/" ? "/dashboard" : next);
+    router.refresh();
   };
 
   return (
