@@ -5,6 +5,7 @@ import path from "node:path";
 import Database from "better-sqlite3";
 import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
+import { admin } from "better-auth/plugins";
 
 /**
  * Server-side Better Auth instance.
@@ -96,19 +97,6 @@ function createAuth() {
         lastName: { type: "string", required: false, input: true },
         phone: { type: "string", required: false, input: true },
         neighbourhood: { type: "string", required: false, input: true },
-        // Never client-settable: privilege and suspension are server-owned.
-        role: {
-          type: "string",
-          required: false,
-          input: false,
-          defaultValue: "renter",
-        },
-        status: {
-          type: "string",
-          required: false,
-          input: false,
-          defaultValue: "active",
-        },
       },
     },
     session: {
@@ -124,22 +112,23 @@ function createAuth() {
         "/sign-up/email": { window: 60, max: 5 },
       },
     },
-    databaseHooks: {
-      session: {
-        create: {
-          // Refuse to mint a session for a suspended account, so suspension is
-          // enforced by the auth server rather than by a client check.
-          before: async (session) => {
-            const row = db
-              .prepare("SELECT status FROM user WHERE id = ?")
-              .get(session.userId) as { status?: string | null } | undefined;
-
-            return row?.status !== "suspended";
-          },
-        },
-      },
-    },
-    plugins: [nextCookies()],
+    plugins: [
+      /**
+       * Self-hosted user management. The admin plugin owns `role` and the
+       * `banned` / `banReason` / `banExpires` fields, and exposes the
+       * `/admin/*` endpoints that the dashboard Users page calls.
+       *
+       * `adminRoles` is the set of roles allowed to call those endpoints;
+       * `defaultRole` matches the marketplace's default account type.
+       */
+      admin({
+        defaultRole: "renter",
+        adminRoles: ["admin"],
+        defaultBanReason: "Suspended by an administrator",
+      }),
+      // Must stay last so Better Auth can set cookies from route handlers.
+      nextCookies(),
+    ],
   });
 }
 

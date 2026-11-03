@@ -15,7 +15,8 @@ export type AuthUserShape = {
   phone?: string | null;
   neighbourhood?: string | null;
   role?: string | null;
-  status?: string | null;
+  /** Owned by the Better Auth admin plugin. */
+  banned?: boolean | null;
   createdAt?: Date | string | null;
 };
 
@@ -77,7 +78,7 @@ export function toDirectoryUser(user: AuthUserShape): User {
     roles: [role],
     phone: user.phone ?? "",
     neighbourhood: user.neighbourhood ?? undefined,
-    status: user.status === "suspended" ? "suspended" : "active",
+    status: user.banned ? "suspended" : "active",
     createdAt: toIso(user.createdAt),
   };
 }
