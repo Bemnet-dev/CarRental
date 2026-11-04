@@ -169,12 +169,32 @@ export function updateCarStatus(id: string, status: Car["status"]) {
   emitDataChanged();
 }
 
-export function updateUserStatus(id: string, status: User["status"]) {
-  const users = read<User[]>(KEYS.USERS, []);
-  write(
-    KEYS.USERS,
-    users.map((user) => (user.id === id ? { ...user, status } : user)),
-  );
+/**
+ * Mirror authoritative Better Auth users into the local directory. The
+ * directory is only a display aid for car ownership and booking history;
+ * Better Auth remains the source of truth for identity, role and suspension.
+ */
+export function syncDirectoryUsers(users: User[]) {
+  if (typeof window === "undefined" || users.length === 0) return;
+
+  const current = read<User[]>(KEYS.USERS, []);
+  const byId = new Map(current.map((user) => [user.id, user]));
+
+  for (const user of users) {
+    const existing = byId.get(user.id);
+    byId.set(
+      user.id,
+      existing
+        ? {
+            ...existing,
+            ...user,
+            createdAt: existing.createdAt || user.createdAt,
+          }
+        : user,
+    );
+  }
+
+  write(KEYS.USERS, [...byId.values()]);
   emitDataChanged();
 }
 

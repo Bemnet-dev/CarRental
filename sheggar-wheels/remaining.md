@@ -2,7 +2,7 @@
 
 This document details every single missing and partial component, route, helper, business rule, and documentation requirement identified during the capstone audit. It serves as the definitive specification for completing the project against its brief.
 
-> **Status note (Nov 2026):** Authentication now uses Better Auth with SQLite instead of a localStorage demo. Section 3.1 and the session-storage bullets in section 2.2 are superseded; see `AUTH.md` for the implemented model and `README.md` for setup. The remaining sections are still the original implementation plan.
+> **Status note (Nov 2026):** Authentication now uses Better Auth with SQLite instead of a localStorage demo, and user management runs through the self-hosted Better Auth admin plugin at `/dashboard/users`. Section 3.1 and the session-storage bullets in section 2.2 are superseded; see `AUTH.md` for the implemented model and `README.md` for setup. The remaining sections are still the original implementation plan.
 
 ---
 
@@ -133,7 +133,7 @@ Add missing entities and expand existing interfaces:
 5. **Role Guardrails**:
    Role drives navigation and data scoping; the marketplace data layer has no server-side authorization.
 6. **Active Session Lockout**:
-   Suspended accounts cannot create a session and are redirected out of the dashboard. Local-storage mutations remain client-side.
+   Implemented with the Better Auth admin plugin. Banned accounts cannot create a session, banning deletes their existing sessions, and the dashboard guard redirects a live banned session. Marketplace data mutations remain client-side.
 
 ---
 

@@ -4,6 +4,9 @@ import * as React from "react";
 import Link from "next/link";
 import {
   Ban,
+  Loader2,
+  LogOut,
+  RefreshCw,
   Search,
   ShieldCheck,
   UserRound,
@@ -18,17 +21,71 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { RoleBadge, StatusBadge } from "@/components/dashboard/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { formatDateTime, updateUserStatus } from "@/lib/dashboard";
+import { authClient } from "@/lib/auth-client";
+import { formatDateTime } from "@/lib/dashboard";
 import type { User, UserRole } from "@/types";
 
 type RoleFilter = "all" | UserRole;
 type StatusFilter = "all" | User["status"];
 
+type Notice = { tone: "success" | "error"; text: string };
+
+type UserActionResult = { error: { message?: string } | null };
+
+const ROLE_OPTIONS: UserRole[] = ["renter", "owner", "admin"];
+
+function displayName(user: User) {
+  return (
+    `${user.firstName} ${user.lastName}`.trim() || user.email || "This account"
+  );
+}
+
 export function UsersView() {
-  const { session, data } = useDashboard();
+  const {
+    session,
+    data,
+    refreshDirectory,
+    directoryStatus,
+    directoryError,
+  } = useDashboard();
   const [search, setSearch] = React.useState("");
   const [roleFilter, setRoleFilter] = React.useState<RoleFilter>("all");
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>("all");
+  const [pendingId, setPendingId] = React.useState<string | null>(null);
+  const [notice, setNotice] = React.useState<Notice | null>(null);
+
+  const runUserAction = React.useCallback(
+    async (
+      userId: string,
+      action: () => Promise<UserActionResult>,
+      successMessage: string,
+    ) => {
+      setPendingId(userId);
+      setNotice(null);
+
+      try {
+        const { error } = await action();
+        if (error) {
+          setNotice({
+            tone: "error",
+            text: error.message || "The action could not be completed.",
+          });
+          return;
+        }
+
+        await refreshDirectory();
+        setNotice({ tone: "success", text: successMessage });
+      } catch {
+        setNotice({
+          tone: "error",
+          text: "The action could not be completed. Check your connection and try again.",
+        });
+      } finally {
+        setPendingId(null);
+      }
+    },
+    [refreshDirectory],
+  );
 
   if (data.role !== "admin") {
     return (
@@ -54,9 +111,12 @@ export function UsersView() {
     );
   }
 
+  const users = [...data.users].sort((a, b) =>
+    (b.createdAt || "").localeCompare(a.createdAt || ""),
+  );
   const normalizedSearch = search.trim().toLowerCase();
 
-  const filtered = data.users.filter((user) => {
+  const filtered = users.filter((user) => {
     const haystack = [
       user.firstName,
       user.lastName,
@@ -74,29 +134,89 @@ export function UsersView() {
     );
   });
 
-  const renters = data.users.filter((user) => user.role === "renter").length;
-  const owners = data.users.filter((user) => user.role === "owner").length;
-  const suspended = data.users.filter(
-    (user) => user.status === "suspended",
-  ).length;
+  const renters = users.filter((user) => user.role === "renter").length;
+  const owners = users.filter((user) => user.role === "owner").length;
+  const suspended = users.filter((user) => user.status === "suspended").length;
+  const isLoading = directoryStatus === "loading";
+
+  const handleToggleBan = (user: User) => {
+    const isSuspended = user.status === "suspended";
+    const name = displayName(user);
+
+    return runUserAction(
+      user.id,
+      () =>
+        isSuspended
+          ? authClient.admin.unbanUser({ userId: user.id })
+          : authClient.admin.banUser({
+              userId: user.id,
+              banReason: "Suspended by an administrator",
+            }),
+      isSuspended
+        ? `${name} can sign in again.`
+        : `${name} is suspended and has been signed out everywhere.`,
+    );
+  };
+
+  const handleRoleChange = (user: User, role: UserRole) => {
+    const article = role === "renter" ? "a" : "an";
+    return runUserAction(
+      user.id,
+      () => authClient.admin.setRole({ userId: user.id, role }),
+      `${displayName(user)} is now ${article} ${role}.`,
+    );
+  };
+
+  const handleRevokeSessions = (user: User) =>
+    runUserAction(
+      user.id,
+      () => authClient.admin.revokeUserSessions({ userId: user.id }),
+      `${displayName(user)} has been signed out of every device.`,
+    );
 
   return (
     <div className="space-y-6">
       <PageHeader
         eyebrow="Admin workspace"
         title="Users"
-        description="Review the people on both sides of the marketplace and manage account access."
+        description="Review the people on both sides of the marketplace and manage their Better Auth accounts."
         actions={
-          <Button variant="outline" asChild>
-            <Link href="/dashboard">Back to overview</Link>
-          </Button>
+          <>
+            <Button
+              variant="outline"
+              onClick={() => void refreshDirectory()}
+              disabled={isLoading}
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+                aria-hidden="true"
+              />
+              Refresh
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/dashboard">Back to overview</Link>
+            </Button>
+          </>
         }
       />
+
+      {notice ? (
+        <div
+          role="status"
+          className={`rounded-lg border px-4 py-3 text-sm ${
+            notice.tone === "success"
+              ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+              : "border-red-200 bg-red-50 text-red-900"
+          }`}
+        >
+          {notice.text}
+        </div>
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Total users"
-          value={data.users.length}
+          value={users.length}
           hint="Renters, owners, and admins"
           icon={Users}
         />
@@ -125,9 +245,25 @@ export function UsersView() {
 
       <SectionCard
         title="All accounts"
-        description="Search by name, email, phone, or neighbourhood."
+        description="Accounts are read from Better Auth. Suspending an account blocks sign-in and revokes its active sessions."
         contentClassName="p-5"
       >
+        {directoryError ? (
+          <div
+            role="alert"
+            className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900"
+          >
+            <span>{directoryError}</span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => void refreshDirectory()}
+            >
+              Retry
+            </Button>
+          </div>
+        ) : null}
+
         <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="relative w-full lg:max-w-sm">
             <Search
@@ -171,7 +307,12 @@ export function UsersView() {
           </div>
         </div>
 
-        {filtered.length === 0 ? (
+        {isLoading && users.length === 0 ? (
+          <div className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-border px-4 py-10 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            Loading accounts from Better Auth…
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border">
             <EmptyState
               icon={Users}
@@ -181,7 +322,7 @@ export function UsersView() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px] text-sm">
+            <table className="w-full min-w-[960px] text-sm">
               <thead>
                 <tr className="border-b border-border/70 bg-secondary/40 text-left text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
                   <th className="px-4 py-3 font-medium">User</th>
@@ -190,12 +331,13 @@ export function UsersView() {
                   <th className="px-4 py-3 font-medium">Phone</th>
                   <th className="px-4 py-3 font-medium">Neighbourhood</th>
                   <th className="px-4 py-3 font-medium">Joined</th>
-                  <th className="px-4 py-3 text-right font-medium">Action</th>
+                  <th className="px-4 py-3 text-right font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((user) => {
                   const isSelf = user.id === session.userId;
+                  const isPending = pendingId === user.id;
 
                   return (
                     <tr
@@ -216,7 +358,28 @@ export function UsersView() {
                         </p>
                       </td>
                       <td className="px-4 py-3">
-                        <RoleBadge role={user.role} />
+                        {isSelf ? (
+                          <RoleBadge role={user.role} />
+                        ) : (
+                          <select
+                            value={user.role}
+                            onChange={(event) =>
+                              void handleRoleChange(
+                                user,
+                                event.target.value as UserRole,
+                              )
+                            }
+                            disabled={isPending}
+                            className="h-8 rounded-md border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-60"
+                            aria-label={`Role for ${displayName(user)}`}
+                          >
+                            {ROLE_OPTIONS.map((role) => (
+                              <option key={role} value={role}>
+                                {role[0].toUpperCase() + role.slice(1)}
+                              </option>
+                            ))}
+                          </select>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <StatusBadge status={user.status} />
@@ -236,23 +399,51 @@ export function UsersView() {
                             Current account
                           </span>
                         ) : (
-                          <Button
-                            size="sm"
-                            variant={
-                              user.status === "active" ? "ghost" : "outline"
-                            }
-                            className="h-8 px-2.5"
-                            onClick={() =>
-                              updateUserStatus(
-                                user.id,
-                                user.status === "active"
-                                  ? "suspended"
-                                  : "active",
-                              )
-                            }
-                          >
-                            {user.status === "active" ? "Suspend" : "Reactivate"}
-                          </Button>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 gap-1.5 px-2.5 text-muted-foreground"
+                              onClick={() => void handleRevokeSessions(user)}
+                              disabled={isPending}
+                              title={`Sign ${displayName(user)} out of every device`}
+                            >
+                              <LogOut
+                                className="h-3.5 w-3.5"
+                                aria-hidden="true"
+                              />
+                              <span className="hidden xl:inline">Sign out</span>
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant={
+                                user.status === "active" ? "ghost" : "outline"
+                              }
+                              className="h-8 gap-1.5 px-2.5"
+                              onClick={() => void handleToggleBan(user)}
+                              disabled={isPending}
+                            >
+                              {isPending ? (
+                                <Loader2
+                                  className="h-3.5 w-3.5 animate-spin"
+                                  aria-hidden="true"
+                                />
+                              ) : user.status === "active" ? (
+                                <Ban
+                                  className="h-3.5 w-3.5"
+                                  aria-hidden="true"
+                                />
+                              ) : (
+                                <ShieldCheck
+                                  className="h-3.5 w-3.5"
+                                  aria-hidden="true"
+                                />
+                              )}
+                              {user.status === "active"
+                                ? "Suspend"
+                                : "Reactivate"}
+                            </Button>
+                          </div>
                         )}
                       </td>
                     </tr>

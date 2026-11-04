@@ -3,6 +3,9 @@
  * sign-in screen. Safe to re-run: existing accounts are left in place (their
  * password is never reset) and only their directory fields are refreshed.
  *
+ * The admin plugin owns `role` and the ban fields, so this script writes
+ * `role` and clears `banned` / `banReason` / `banExpires` for demo accounts.
+ *
  * Run with: npm run db:seed
  */
 import { randomBytes } from "node:crypto";
@@ -82,14 +85,14 @@ const findUser = db.prepare("SELECT id FROM user WHERE email = ?");
 const updateUser = db.prepare(
   `UPDATE user
       SET name = ?, firstName = ?, lastName = ?, phone = ?, neighbourhood = ?,
-          role = ?, status = 'active', updatedAt = ?
+          role = ?, banned = 0, banReason = NULL, banExpires = NULL, updatedAt = ?
     WHERE id = ?`,
 );
 const insertUser = db.prepare(
   `INSERT INTO user
      (id, name, email, emailVerified, image, createdAt, updatedAt,
-      firstName, lastName, phone, neighbourhood, role, status)
-   VALUES (?, ?, ?, 1, NULL, ?, ?, ?, ?, ?, ?, ?, 'active')`,
+      firstName, lastName, phone, neighbourhood, role, banned)
+   VALUES (?, ?, ?, 1, NULL, ?, ?, ?, ?, ?, ?, ?, 0)`,
 );
 const insertAccount = db.prepare(
   `INSERT INTO account

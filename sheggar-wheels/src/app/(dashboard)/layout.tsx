@@ -26,9 +26,9 @@ export default async function DashboardLayout({
     redirect("/signin?next=%2Fdashboard");
   }
 
-  // Suspension is also blocked when a session is created (see lib/auth.ts);
-  // this covers a session that was already alive when the account was banned.
-  if (session?.user.status === "suspended") {
+  // The admin plugin blocks banned users at session creation. This covers a
+  // session that was already alive when the account was banned.
+  if (session?.user.banned) {
     redirect("/signin?suspended=1");
   }
 

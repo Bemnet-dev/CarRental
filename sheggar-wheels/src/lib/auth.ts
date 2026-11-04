@@ -7,6 +7,8 @@ import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
 import { admin } from "better-auth/plugins";
 
+import { authRoles } from "@/lib/auth-roles";
+
 /**
  * Server-side Better Auth instance.
  *
@@ -122,6 +124,7 @@ function createAuth() {
        * `defaultRole` matches the marketplace's default account type.
        */
       admin({
+        roles: authRoles,
         defaultRole: "renter",
         adminRoles: ["admin"],
         defaultBanReason: "Suspended by an administrator",

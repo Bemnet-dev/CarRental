@@ -27,7 +27,7 @@ Use this comprehensive checklist to verify that all functional requirements, sec
 - [ ] **Role Coexistence (gap)**:
   - [ ] Dual-role accounts (`roles: ['renter', 'owner']`) are not supported; Better Auth stores one `role` per user and the UI derives `roles: [role]`.
 - [ ] **Public Signup Security**:
-  - [ ] Public `/signup` always creates a `renter` and cannot submit `role` or `status` (`input: false`).
+  - [ ] Public `/signup` always creates a `renter` and cannot submit `role` or the ban fields (`input: false`).
   - [ ] Admin access exists only through the seeded `admin@dashdrive.com` account.
 - [ ] **Session Validation**:
   - [ ] The session is a `better-auth.session_token` cookie with `HttpOnly`, `SameSite=Lax` and a 7-day lifetime.
@@ -37,9 +37,10 @@ Use this comprehensive checklist to verify that all functional requirements, sec
   - [ ] Clicking "Sign out" deletes the session row, clears the cookie and redirects to `/`.
   - [ ] A subsequent visit to `/dashboard` redirects to `/signin?next=%2Fdashboard`.
 - [ ] **Suspended User Lockout**:
-  - [ ] Better Auth refuses to create a session for a suspended account (sign-in returns `401`).
-  - [ ] The dashboard server guard redirects an already-live session whose user is suspended.
-  - [ ] **(gap)** Admin "Suspend" in the users view updates only the local directory, not the Better Auth `user.status`, so it does not block that account's next sign-in.
+  - [ ] Better Auth refuses to create a session for a banned account (sign-in returns `403` / `BANNED_USER`).
+  - [ ] The dashboard server guard redirects an already-live session whose user is banned.
+  - [ ] Admin "Suspend" in `/dashboard/users` calls the Better Auth admin API, sets `banned`, deletes that user's sessions and blocks their next sign-in.
+  - [ ] "Reactivate" clears the ban and restores sign-in.
 - [ ] **Rate Limiting & Origin Checks**:
   - [ ] The 9th rapid bad sign-in returns `429` and the form shows "Too many attempts. Wait a minute and try again."
   - [ ] A sign-in POST with an untrusted `Origin` returns `403`; a trusted origin returns `200`.
@@ -82,10 +83,9 @@ Use this comprehensive checklist to verify that all functional requirements, sec
 - [ ] `/owner/disputes`: Host damage/incident claims manager.
 
 ### 3.4 Admin Protected Routes (Requires `admin` role; unauthorized users blocked)
-- [ ] `/admin`: Platform overview (total users, approved vs pending cars, platform fee revenue).
-- [ ] `/admin/listings`: Pending car queue with "Approve" and "Reject" buttons.
-- [ ] `/admin/users`: User list with "Suspend" and "Reinstate" buttons.
-- [ ] `/admin/users/[id]`: User profile and activity inspector.
+- [ ] `/dashboard`: Platform overview (total users, approved vs pending cars, platform fee revenue).
+- [ ] `/dashboard/listings`: Pending car queue with "Approve" and "Reject" buttons.
+- [ ] `/dashboard/users`: Better Auth user list with role changes, "Suspend"/"Reactivate", and "Sign out everywhere".
 - [ ] `/admin/bookings`: System-wide reservations ledger.
 - [ ] `/admin/disputes`: List of open renter/owner disputes.
 - [ ] `/admin/disputes/[id]`: Dispute resolution view with admin notes and "Resolve" action.

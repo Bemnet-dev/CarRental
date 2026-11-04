@@ -26,15 +26,21 @@ Set `BETTER_AUTH_SECRET` to 32+ random characters. In development you can leave
 it blank: the app generates a secret once and stores it in `data/auth.secret`
 (never committed).
 
-Create the auth tables and seed the demo accounts:
+Create the auth tables, apply the admin-plugin columns and seed the demo
+accounts:
 
 ```bash
-npm run db:migrate
-npm run db:seed
+npm run db:setup
 ```
 
-The migration CLI can log a "Database schema mismatch" warning while it
-creates the tables. If `npm run db:seed` then succeeds, the schema is ready.
+That runs `db:migrate` (Better Auth tables), `db:migrate:admin` (role and ban
+columns used by the in-app user manager) and `db:seed`. The migration CLI can
+log a "Database schema mismatch" warning while it creates the tables. If
+`npm run db:seed` then succeeds, the schema is ready.
+
+If you already have an auth database from an earlier version, run
+`npm run db:migrate:admin` once to add the admin columns and migrate any
+legacy `user.status = "suspended"` rows to `user.banned`.
 
 Run the app:
 
@@ -81,6 +87,10 @@ user's role.
   redirected to `/signin?next=...`.
 - Suspended accounts cannot create a session, and an already-live session is
   redirected out of the dashboard.
+- Admins manage Better Auth users at `/dashboard/users`: change roles,
+  suspend/reactivate accounts (which also revokes their sessions), and sign a
+  user out of every device. The page uses Better Auth's admin plugin, not a
+  separate service.
 - Passwords are stored as scrypt hashes in `data/auth.db`. Neither
   `localStorage` nor the user directory contains passwords.
 - Sign-in and sign-up are rate limited per IP (10 and 5 attempts per minute).
@@ -96,10 +106,12 @@ See [AUTH.md](AUTH.md) for the model, configuration and known gaps.
 | `npm run start`    | Serve the production build                           |
 | `npm run lint`     | ESLint                                               |
 | `npm run db:migrate` | Create/update the Better Auth SQLite schema        |
+| `npm run db:migrate:admin` | Add admin-plugin role/ban columns to an existing DB |
+| `npm run db:setup` | Run the full migration and seed sequence             |
 | `npm run db:seed`  | Create or refresh the five demo accounts             |
 
-`npm run db:seed` is idempotent: it refreshes directory fields, reactivates the
-demo accounts and never resets an existing password.
+`npm run db:seed` is idempotent: it refreshes directory fields, clears any ban
+on the demo accounts and never resets an existing password.
 
 ## Data
 
@@ -116,9 +128,10 @@ Auth data lives in `data/auth.db` (WAL mode). Both `data/auth.db` and
 This is a capstone demo, not a production rental platform:
 
 - The marketplace directory is client-trusted `localStorage`; only
-  authentication is server-enforced.
-- Admin "Suspend" in the users view updates the local directory but not the
-  Better Auth record, so it does not block that account's future sign-ins.
+  authentication and user management are server-enforced.
+- User management is the self-hosted Better Auth admin plugin. The hosted
+  Better Auth Infrastructure dashboard is not connected; doing so would
+  require `@better-auth/infra` and an API key.
 - Rate-limit counters are in memory and reset when the server restarts.
 - Email verification, password reset, magic links and 2FA are not enabled.
 - A user has one role; dual renter/owner accounts are not supported.

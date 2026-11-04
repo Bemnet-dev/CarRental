@@ -10,17 +10,20 @@ Better Auth owns four tables in `data/auth.db`:
 
 - `user` — `id`, `name`, `email` (unique), `emailVerified`, `image`,
   timestamps plus the app fields `firstName`, `lastName`, `phone`,
-  `neighbourhood`, `role`, `status`.
+  `neighbourhood`, and the admin-plugin fields `role`, `banned`, `banReason`,
+  `banExpires`.
 - `account` — credential record per user. `password` holds a scrypt
   `salt:hash` string; `providerId` is `credential`.
 - `session` — one row per active session, keyed by a random `token`, with
-  `expiresAt`, IP and user agent. Deleting the row revokes the session.
+  `expiresAt`, IP and user agent, plus `impersonatedBy` for the admin plugin.
+  Deleting the row revokes the session.
 - `verification` — reserved for future email/password-reset flows.
 
-`role` and `status` are declared with `input: false`, so a client can never
-submit them. `role` defaults to `renter` and `status` to `active`; only the
-seed script or a server-side update can change them. The app stores a single
-role and derives `roles: [role]` when mapping to the UI model.
+`role` and the ban fields are declared with `input: false`, so a client can
+never submit them. The admin plugin defaults new accounts to `renter`; only
+an admin API call, the seed script, or a server-side update can change the
+role or ban state. The app stores a single role and derives `roles: [role]`
+when mapping to the UI model.
 
 ## Configuration
 
@@ -35,9 +38,17 @@ role and derives `roles: [role]` when mapping to the UI model.
 | Minimum password | 10 characters for public sign-up |
 | Rate limits | 60 requests/min per path; 10/min for `/sign-in/email`; 5/min for `/sign-up/email` |
 | Extra origins | `BETTER_AUTH_TRUSTED_ORIGINS` (comma separated) |
+| Admin plugin | `roles` = renter/owner/admin, `defaultRole: "renter"`, `adminRoles: ["admin"]`, default ban reason |
+| Admin UI | `/dashboard/users` (admins only) |
 
 `nextCookies()` is registered last so Better Auth can set cookies from Server
-Actions and route handlers.
+Actions and route handlers. The admin plugin is self-hosted: it exposes the
+`/api/auth/admin/*` endpoints and owns the role and ban fields. The hosted
+Better Auth Infrastructure dashboard is not enabled.
+
+Existing databases need `npm run db:migrate:admin` once. It adds `banned`,
+`banReason`, `banExpires` and `session.impersonatedBy`, and folds the legacy
+`user.status` column into `user.banned` before dropping it.
 
 Production requires a strong `BETTER_AUTH_SECRET` and a stable
 `BETTER_AUTH_URL` (HTTPS). The generated file secret is a development
@@ -63,17 +74,41 @@ Profile edits call `authClient.updateUser` for `firstName`, `lastName`,
 Sign-out calls `authClient.signOut()`, which deletes the session row and clears
 the cookie; the legacy `sw_session_v1` key is also removed if it still exists.
 
+## User management
+
+Admins manage Better Auth accounts from `/dashboard/users`. The page calls the
+admin plugin's client API and writes the authoritative result back into the
+local directory mirror:
+
+| Action | Better Auth call | Effect |
+| --- | --- | --- |
+| Refresh | `authClient.admin.listUsers` | Reads every account, role and ban state |
+| Change role | `authClient.admin.setRole` | Sets `renter`, `owner` or `admin` |
+| Suspend | `authClient.admin.banUser` | Sets `banned`, stores the reason, deletes all sessions |
+| Reactivate | `authClient.admin.unbanUser` | Clears `banned` / `banReason` / `banExpires` |
+| Sign out everywhere | `authClient.admin.revokeUserSessions` | Deletes every session for that account |
+
+The page disables self-management: an admin cannot change their own role or
+ban themselves. `src/components/dashboard/dashboard-context.tsx` refreshes the
+directory from Better Auth when an admin opens the dashboard, so the overview
+counts and the users table show the same authoritative records.
+
 ## Authorization
 
 - Authentication is required for all `/dashboard/*` routes, including the
   owner fleet and admin users views, via the server layout guard.
 - `role` drives the workspace label, navigation and data scoping
   (`loadDashboardData` filters cars and bookings by the current user).
-- Role checks are presentation/data-scoping only: the marketplace itself is a
-  local demo store, so there is no server API that enforces ownership.
-- Suspension is enforced twice: `databaseHooks.session.create.before` refuses
-  to create a session for `status = "suspended"`, and the dashboard layout
-  redirects a session whose user is suspended.
+- The admin plugin enforces `adminRoles: ["admin"]` on every
+  `/api/auth/admin/*` endpoint, so the Users page's client-side role check is
+  only a UX guard; a non-admin call still receives `403`.
+- Marketplace role checks are presentation/data-scoping only: the marketplace
+  itself is a local demo store, so there is no server API that enforces
+  ownership.
+- Suspension uses the admin plugin's `banned` flag. A banned account cannot
+  create a session (`403` / `BANNED_USER`), banning deletes its existing
+  sessions, and the dashboard layout redirects a live session whose
+  `user.banned` is true.
 - `safeReturn` only accepts same-origin absolute paths. It rejects
   protocol-relative URLs, backslash/control-character variants, paths that
   normalize to `//host`, and any value that parses to another origin.
@@ -85,8 +120,8 @@ the cookie; the legacy `sw_session_v1` key is also removed if it still exists.
 references). It uses `hashPassword` from `better-auth/crypto`, so the stored
 value matches what the sign-in endpoint expects.
 
-Re-running the seed updates names, phone, neighbourhood, role and status, and
-reactivates suspended demo accounts. It never overwrites an existing password.
+Re-running the seed updates names, phone, neighbourhood and role, and clears
+the ban fields on the demo accounts. It never overwrites an existing password.
 
 Public sign-up always creates a `renter`. The admin account cannot be created
 through the public form.
@@ -100,9 +135,14 @@ Against a production build (`next build` + `next start`):
 | Admin sign-in | `200`, cookie `better-auth.session_token` HttpOnly/SameSite=Lax/7 days; `/dashboard` renders "Admin workspace" |
 | Wrong password | `401`; UI shows "Invalid credentials" and stays on `/signin` |
 | `GET /dashboard` without a cookie | `307` to `/signin?next=%2Fdashboard` |
-| Sign-out | session row deleted (11 → 10 in the test DB); next `/dashboard` request redirects |
+| Sign-out | session row deleted; next `/dashboard` request redirects to `/signin` |
 | Signed-out form submit | focus moves to email, `aria-invalid=true`, `role=alert` "Enter your email." |
-| Suspended account | sign-in `401`; reactivated account `200` |
+| Suspended account | sign-in `403` / `BANNED_USER`; reactivated account `200` |
+| Admin user list | `GET /api/auth/admin/list-users` returns the five demo accounts with `role` and `banned` |
+| Admin role change | `set-role` to `owner` and back to `renter` returns `200` and the UI shows the new role |
+| Admin suspend/reactivate | `ban-user` sets `banned`, blocks sign-in and deletes sessions; `unban-user` restores sign-in |
+| Revoke sessions | `revoke-user-sessions` returns `{ success: true }`; the revoked cookie no longer resolves a session |
+| Users dashboard | `/dashboard/users` renders five rows, live role selects and suspend/reactivate/sign-out actions with no console errors |
 | Untrusted origin | sign-in POST with `Origin: http://evil.example` returns `403`; a trusted origin returns `200` |
 | Rate limiting | 9th rapid bad sign-in returns `429`; UI shows "Too many attempts. Wait a minute and try again." |
 | New sign-up | creates a `renter`, lands on `/dashboard`; no `password` field is written to `localStorage` |
@@ -128,8 +168,9 @@ Before production use:
 - Move rate limiting to a shared store (Redis) if more than one instance runs.
 - Move the marketplace (cars, bookings, users) behind server APIs with
   authorization checks; `localStorage` is not a trust boundary.
-- Make admin suspension update the auth `user.status` row, not only the local
-  directory.
+- The in-app admin plugin is self-hosted. The hosted Better Auth
+  Infrastructure dashboard (`dash()`) is not enabled; connecting it would
+  require `@better-auth/infra` and a `BETTER_AUTH_API_KEY`.
 - Serve over HTTPS in production and replace the CSP's `'unsafe-inline'`
   script allowance with nonces or hashes.
 - Upgrade Next.js when a release with the patched PostCSS is available
