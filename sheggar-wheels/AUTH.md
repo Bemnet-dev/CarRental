@@ -61,6 +61,13 @@ Production requires a strong `BETTER_AUTH_SECRET` and a stable
 `BETTER_AUTH_URL` (HTTPS). The generated file secret is a development
 convenience, not a production key.
 
+On Vercel, set `BETTER_AUTH_URL=https://dashdrive2026.vercel.app`,
+`BETTER_AUTH_SECRET` and (optionally) `BETTER_AUTH_API_KEY` in the project's
+environment variables. The local SQLite file cannot be used there: the
+serverless filesystem is read-only and `/tmp` is ephemeral, so `/api/auth/*`
+returns `500`. A hosted database (Turso/libSQL or Postgres) or a platform with
+a persistent disk is required.
+
 ## Request flow
 
 1. `AuthScreen` calls `signIn` / `signUp` from `src/lib/session.ts`.

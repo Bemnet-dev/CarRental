@@ -65,6 +65,27 @@ npm run start
 Set `BETTER_AUTH_URL` to the public HTTPS origin, provide a permanent
 `BETTER_AUTH_SECRET`, and keep the `data/` directory on persistent storage.
 
+## Deploying to Vercel
+
+Set these environment variables in the Vercel project
+(Settings → Environment Variables), then redeploy:
+
+| Variable | Value |
+| --- | --- |
+| `BETTER_AUTH_URL` | `https://dashdrive2026.vercel.app` |
+| `BETTER_AUTH_SECRET` | 32+ random characters |
+| `BETTER_AUTH_API_KEY` | optional, from <https://dash.better-auth.com> |
+
+`trustedOrigins` reads `BETTER_AUTH_URL`, so cookies and CSRF origin checks
+work on the deployed domain without hardcoding it in source.
+
+> **SQLite does not work on Vercel.** Auth data lives in `data/auth.db` and is
+> opened with `better-sqlite3`. Vercel's serverless filesystem is read-only
+> except for `/tmp`, and `/tmp` is per-instance and ephemeral, so the database
+> cannot be created or persisted. Any `/api/auth/*` request fails with `500`.
+> Use a hosted database (Turso/libSQL or Postgres) or deploy to a platform with
+> a persistent disk.
+
 ## Demo accounts
 
 | Role   | Email                  | Password    |
