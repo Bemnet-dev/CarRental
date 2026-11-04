@@ -7,29 +7,54 @@ import { dash } from "@better-auth/infra";
 import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
 import { admin } from "better-auth/plugins";
+import { Pool } from "pg";
 
 import { authRoles } from "@/lib/auth-roles";
 
 /**
  * Server-side Better Auth instance.
  *
- * Sessions live in SQLite (`data/auth.db`) and are delivered as httpOnly
- * cookies, so no credential or token is ever readable by page JavaScript.
- * Only the dashboard data directory (cars, bookings, demo users) still lives
- * in localStorage.
+ * Sessions are delivered as httpOnly cookies, so no credential or token is
+ * ever readable by page JavaScript. Only the dashboard data directory (cars,
+ * bookings, demo users) still lives in localStorage.
+ *
+ * Two database modes:
+ * - Local development: a `better-sqlite3` file at `data/auth.db`.
+ * - Serverless (Vercel): Postgres, selected by `DATABASE_URL` or
+ *   `POSTGRES_URL` (Vercel Postgres / Neon).
  */
 
+const databaseUrl =
+  process.env.DATABASE_URL?.trim() ||
+  process.env.POSTGRES_URL?.trim() ||
+  undefined;
+const usesPostgres = Boolean(databaseUrl);
+
 const dataDir = path.join(process.cwd(), "data");
-if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+// Vercel's filesystem is read-only except /tmp, so never touch it in Postgres mode.
+if (!usesPostgres && !fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
 
 /**
  * Prefer an explicit env secret. Without one, generate a random secret and
  * keep it next to the database so dev/demo builds stay reproducible without a
  * hardcoded fallback in source.
+ *
+ * Postgres mode has no writable local directory, so `BETTER_AUTH_SECRET` is
+ * required there; an in-memory secret would invalidate every session whenever
+ * a new serverless instance starts.
  */
 function resolveSecret() {
-  const fromEnv = process.env.BETTER_AUTH_SECRET;
+  const fromEnv = process.env.BETTER_AUTH_SECRET?.trim();
   if (fromEnv) return fromEnv;
+
+  if (usesPostgres) {
+    throw new Error(
+      "BETTER_AUTH_SECRET is required when DATABASE_URL is set. " +
+        "Add a 32+ character secret to the environment.",
+    );
+  }
 
   const secretFile = path.join(dataDir, "auth.secret");
   if (fs.existsSync(secretFile)) {
@@ -67,6 +92,7 @@ function resolveTrustedOrigins() {
 const globalForAuth = globalThis as typeof globalThis & {
   __dashdriveAuth?: ReturnType<typeof createAuth>;
   __dashdriveDb?: Database.Database;
+  __dashdrivePool?: Pool;
 };
 
 function openDatabase() {
@@ -78,13 +104,32 @@ function openDatabase() {
   return database;
 }
 
-// One connection per process; dev HMR reloads reuse the cached handle.
-const db = globalForAuth.__dashdriveDb ?? openDatabase();
-if (process.env.NODE_ENV !== "production") globalForAuth.__dashdriveDb = db;
+/**
+ * One handle per process. Postgres mode uses a `pg` pool (Better Auth detects
+ * it as a Postgres database); local mode keeps the existing `better-sqlite3`
+ * file. Caching in `globalThis` also keeps dev HMR reloads from opening a new
+ * connection on every edit.
+ */
+function resolveDatabase() {
+  if (databaseUrl) {
+    globalForAuth.__dashdrivePool ??= new Pool({
+      connectionString: databaseUrl,
+      // Serverless functions are short-lived; a small pool avoids exhausting
+      // Neon's connection limit.
+      max: 5,
+    });
+    return globalForAuth.__dashdrivePool;
+  }
+
+  globalForAuth.__dashdriveDb ??= openDatabase();
+  return globalForAuth.__dashdriveDb;
+}
+
+const database = resolveDatabase();
 
 function createAuth() {
   return betterAuth({
-    database: db,
+    database,
     secret: resolveSecret(),
     baseURL: process.env.BETTER_AUTH_URL,
     trustedOrigins: resolveTrustedOrigins(),

@@ -1,7 +1,9 @@
 # Authentication
 
 DashDrive uses [Better Auth](https://www.better-auth.com/) 1.7 with the
-email/password provider and a SQLite database (`better-sqlite3`). The auth
+email/password provider and SQLite/Postgres. Local development uses a
+`better-sqlite3` file at `data/auth.db`; serverless deployments use Postgres
+(Vercel Postgres / Neon) when `DATABASE_URL` or `POSTGRES_URL` is set. The auth
 server runs inside the Next.js app; there is no separate service.
 
 ## Data model
@@ -31,6 +33,7 @@ when mapping to the UI model.
 
 | Setting | Value |
 | --- | --- |
+| `database` | `DATABASE_URL` / `POSTGRES_URL` (Postgres) when set, else `data/auth.db` via `better-sqlite3` |
 | `baseURL` | `BETTER_AUTH_URL` (defaults to the request origin; set it in production) |
 | `secret` | `BETTER_AUTH_SECRET`, else a random secret persisted to `data/auth.secret` |
 | `trustedOrigins` | `BETTER_AUTH_URL`, `BETTER_AUTH_TRUSTED_ORIGINS`, and in non-production the local ports 3000/3100 |
@@ -62,11 +65,13 @@ Production requires a strong `BETTER_AUTH_SECRET` and a stable
 convenience, not a production key.
 
 On Vercel, set `BETTER_AUTH_URL=https://dashdrive2026.vercel.app`,
-`BETTER_AUTH_SECRET` and (optionally) `BETTER_AUTH_API_KEY` in the project's
-environment variables. The local SQLite file cannot be used there: the
-serverless filesystem is read-only and `/tmp` is ephemeral, so `/api/auth/*`
-returns `500`. A hosted database (Turso/libSQL or Postgres) or a platform with
-a persistent disk is required.
+`BETTER_AUTH_SECRET`, `DATABASE_URL` (the pooled Vercel Postgres / Neon
+connection string) and (optionally) `BETTER_AUTH_API_KEY`. When `DATABASE_URL`
+is present the server uses a `pg` pool instead of the local file, and
+`BETTER_AUTH_SECRET` is mandatory because there is no writable directory for
+the generated secret. Run `npm run db:setup` once with the same Postgres
+variables to create the schema and demo accounts. See the README for the full
+Vercel checklist.
 
 ## Request flow
 
@@ -157,6 +162,7 @@ Against a production build (`next build` + `next start`):
 | Admin suspend/reactivate | `ban-user` sets `banned`, blocks sign-in and deletes sessions; `unban-user` restores sign-in |
 | Revoke sessions | `revoke-user-sessions` returns `{ success: true }`; the revoked cookie no longer resolves a session |
 | Users dashboard | `/dashboard/users` renders five rows, live role selects and suspend/reactivate/sign-out actions with no console errors |
+| Postgres mode | Dialect detection returns `postgres` for a `pg` pool; the Better Auth CLI generates the Postgres schema from the same config. Full sign-in flow requires a live Postgres URL (not available in this environment). |
 | Untrusted origin | sign-in POST with `Origin: http://evil.example` returns `403`; a trusted origin returns `200` |
 | Rate limiting | 9th rapid bad sign-in returns `429`; UI shows "Too many attempts. Wait a minute and try again." |
 | New sign-up | creates a `renter`, lands on `/dashboard`; no `password` field is written to `localStorage` |

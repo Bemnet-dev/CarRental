@@ -65,26 +65,52 @@ npm run start
 Set `BETTER_AUTH_URL` to the public HTTPS origin, provide a permanent
 `BETTER_AUTH_SECRET`, and keep the `data/` directory on persistent storage.
 
-## Deploying to Vercel
+## Deploying to Vercel (Postgres / Neon)
 
-Set these environment variables in the Vercel project
-(Settings → Environment Variables), then redeploy:
+Vercel's filesystem is read-only except for `/tmp`, and `/tmp` is per-instance
+and ephemeral, so the local `data/auth.db` cannot be used there. The app
+switches to Postgres whenever `DATABASE_URL` (or `POSTGRES_URL`) is set.
 
-| Variable | Value |
-| --- | --- |
-| `BETTER_AUTH_URL` | `https://dashdrive2026.vercel.app` |
-| `BETTER_AUTH_SECRET` | 32+ random characters |
-| `BETTER_AUTH_API_KEY` | optional, from <https://dash.better-auth.com> |
+1. In the Vercel project, open **Storage → Create Database → Postgres**
+   (Neon-backed). Copy the **pooled** connection string.
+
+2. Add these environment variables in **Settings → Environment Variables**,
+   then redeploy:
+
+   | Variable | Value |
+   | --- | --- |
+   | `BETTER_AUTH_URL` | `https://dashdrive2026.vercel.app` |
+   | `BETTER_AUTH_SECRET` | 32+ random characters (required in Postgres mode) |
+   | `DATABASE_URL` | the pooled Postgres connection string |
+   | `BETTER_AUTH_API_KEY` | optional, from <https://dash.better-auth.com> |
+
+   `POSTGRES_URL` is also accepted if that is the name Vercel gave you.
+
+3. Create the schema and demo accounts against Postgres from your machine,
+   then redeploy:
+
+   ```bash
+   # macOS/Linux
+   export DATABASE_URL="postgres://..."
+   export BETTER_AUTH_SECRET="..."
+   npm run db:setup
+   ```
+
+   ```powershell
+   # PowerShell
+   $env:DATABASE_URL="postgres://..."
+   $env:BETTER_AUTH_SECRET="..."
+   npm run db:setup
+   ```
+
+   `db:setup` runs the Better Auth migration, the admin-column migration and
+   the demo seed.
 
 `trustedOrigins` reads `BETTER_AUTH_URL`, so cookies and CSRF origin checks
 work on the deployed domain without hardcoding it in source.
 
-> **SQLite does not work on Vercel.** Auth data lives in `data/auth.db` and is
-> opened with `better-sqlite3`. Vercel's serverless filesystem is read-only
-> except for `/tmp`, and `/tmp` is per-instance and ephemeral, so the database
-> cannot be created or persisted. Any `/api/auth/*` request fails with `500`.
-> Use a hosted database (Turso/libSQL or Postgres) or deploy to a platform with
-> a persistent disk.
+Local development is unchanged: with `DATABASE_URL` blank, the app uses
+`data/auth.db` and does not require `BETTER_AUTH_SECRET`.
 
 ## Demo accounts
 
@@ -117,8 +143,9 @@ user's role.
   suspend/reactivate accounts (which also revokes their sessions), and sign a
   user out of every device. The page uses Better Auth's admin plugin, not a
   separate service.
-- Passwords are stored as scrypt hashes in `data/auth.db`. Neither
-  `localStorage` nor the user directory contains passwords.
+- Passwords are stored as scrypt hashes in the auth database (local
+  `data/auth.db` or Postgres). Neither `localStorage` nor the user directory
+  contains passwords.
 - Sign-in and sign-up are rate limited per IP (10 and 5 attempts per minute).
 
 See [AUTH.md](AUTH.md) for the model, configuration and known gaps.
@@ -158,6 +185,8 @@ This is a capstone demo, not a production rental platform:
 - User management is the self-hosted Better Auth admin plugin. The hosted
   Better Auth Infrastructure dashboard is connected through `dash()`; it
   stays empty until `BETTER_AUTH_API_KEY` is set.
+- On Vercel the app needs Postgres (`DATABASE_URL`); the local SQLite file is
+  not writable or persistent on a serverless filesystem.
 - Rate-limit counters are in memory and reset when the server restarts.
 - Email verification, password reset, magic links and 2FA are not enabled.
 - A user has one role; dual renter/owner accounts are not supported.

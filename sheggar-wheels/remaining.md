@@ -2,7 +2,7 @@
 
 This document details every single missing and partial component, route, helper, business rule, and documentation requirement identified during the capstone audit. It serves as the definitive specification for completing the project against its brief.
 
-> **Status note (Nov 2026):** Authentication now uses Better Auth with SQLite instead of a localStorage demo, and user management runs through the self-hosted Better Auth admin plugin at `/dashboard/users`. Section 3.1 and the session-storage bullets in section 2.2 are superseded; see `AUTH.md` for the implemented model and `README.md` for setup. The remaining sections are still the original implementation plan.
+> **Status note (Nov 2026):** Authentication now uses Better Auth with SQLite instead of a localStorage demo, and user management runs through the self-hosted Better Auth admin plugin at `/dashboard/users`. Local development uses `data/auth.db`; serverless deployments use Postgres (Vercel Postgres / Neon) when `DATABASE_URL` is set. Section 3.1 and the session-storage bullets in section 2.2 are superseded; see `AUTH.md` for the implemented model and `README.md` for setup. The remaining sections are still the original implementation plan.
 
 ---
 
