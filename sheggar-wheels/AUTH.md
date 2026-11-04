@@ -40,11 +40,18 @@ when mapping to the UI model.
 | Extra origins | `BETTER_AUTH_TRUSTED_ORIGINS` (comma separated) |
 | Admin plugin | `roles` = renter/owner/admin, `defaultRole: "renter"`, `adminRoles: ["admin"]`, default ban reason |
 | Admin UI | `/dashboard/users` (admins only) |
+| Hosted dashboard | `dash()` from `@better-auth/infra`, `apiKey` from `BETTER_AUTH_API_KEY` |
 
 `nextCookies()` is registered last so Better Auth can set cookies from Server
 Actions and route handlers. The admin plugin is self-hosted: it exposes the
-`/api/auth/admin/*` endpoints and owns the role and ban fields. The hosted
-Better Auth Infrastructure dashboard is not enabled.
+`/api/auth/admin/*` endpoints and owns the role and ban fields.
+
+The hosted Better Auth Infrastructure dashboard is wired in through `dash()`.
+Set `BETTER_AUTH_API_KEY` to the key from <https://dash.better-auth.com> to
+send events and directory data; with an empty key the plugin still loads and
+sign-in works, but the hosted dashboard stays empty. `activityTracking` and
+`managedDirectorySync` are deliberately disabled because they add columns and
+tables to `data/auth.db`; enable them only together with a migration.
 
 Existing databases need `npm run db:migrate:admin` once. It adds `banned`,
 `banReason`, `banExpires` and `session.impersonatedBy`, and folds the legacy
@@ -169,8 +176,9 @@ Before production use:
 - Move the marketplace (cars, bookings, users) behind server APIs with
   authorization checks; `localStorage` is not a trust boundary.
 - The in-app admin plugin is self-hosted. The hosted Better Auth
-  Infrastructure dashboard (`dash()`) is not enabled; connecting it would
-  require `@better-auth/infra` and a `BETTER_AUTH_API_KEY`.
+  Infrastructure dashboard is wired in with `dash()`, but it only receives
+  data once `BETTER_AUTH_API_KEY` is set; the plugin loads and sign-in works
+  without it.
 - Serve over HTTPS in production and replace the CSP's `'unsafe-inline'`
   script allowance with nonces or hashes.
 - Upgrade Next.js when a release with the patched PostCSS is available

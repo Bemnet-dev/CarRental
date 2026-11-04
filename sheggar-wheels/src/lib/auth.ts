@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import Database from "better-sqlite3";
+import { dash } from "@better-auth/infra";
 import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
 import { admin } from "better-auth/plugins";
@@ -128,6 +129,20 @@ function createAuth() {
         defaultRole: "renter",
         adminRoles: ["admin"],
         defaultBanReason: "Suspended by an administrator",
+      }),
+      /**
+       * Hosted Better Auth dashboard (`dash.better-auth.com`). The API key is
+       * read from `BETTER_AUTH_API_KEY`; without one the plugin still loads but
+       * its background event calls are rejected and logged at debug level.
+       *
+       * `activityTracking` and `managedDirectorySync` stay off because they
+       * add columns/tables to the auth database. Turn them on only together
+       * with a migration.
+       */
+      dash({
+        apiKey: process.env.BETTER_AUTH_API_KEY,
+        activityTracking: { enabled: false },
+        managedDirectorySync: { enabled: false },
       }),
       // Must stay last so Better Auth can set cookies from route handlers.
       nextCookies(),

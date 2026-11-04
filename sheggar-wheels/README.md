@@ -26,6 +26,11 @@ Set `BETTER_AUTH_SECRET` to 32+ random characters. In development you can leave
 it blank: the app generates a secret once and stores it in `data/auth.secret`
 (never committed).
 
+Optionally set `BETTER_AUTH_API_KEY` to the key from
+<https://dash.better-auth.com> to populate the hosted Better Auth dashboard.
+Leave it blank to keep the hosted dashboard disconnected; sign-in and the
+in-app admin pages work either way.
+
 Create the auth tables, apply the admin-plugin columns and seed the demo
 accounts:
 
@@ -130,8 +135,8 @@ This is a capstone demo, not a production rental platform:
 - The marketplace directory is client-trusted `localStorage`; only
   authentication and user management are server-enforced.
 - User management is the self-hosted Better Auth admin plugin. The hosted
-  Better Auth Infrastructure dashboard is not connected; doing so would
-  require `@better-auth/infra` and an API key.
+  Better Auth Infrastructure dashboard is connected through `dash()`; it
+  stays empty until `BETTER_AUTH_API_KEY` is set.
 - Rate-limit counters are in memory and reset when the server restarts.
 - Email verification, password reset, magic links and 2FA are not enabled.
 - A user has one role; dual renter/owner accounts are not supported.
